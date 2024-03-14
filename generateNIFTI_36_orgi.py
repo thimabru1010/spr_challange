@@ -4,7 +4,6 @@ import numpy as np
 import nibabel as nib
 import pydicom
 import shutil
-from tqdm import tqdm
 
 # Pacotes adicionais
 # pip install python-gdcm
@@ -13,17 +12,15 @@ from tqdm import tqdm
 
 
 def dir2nii(dirSerie, outputFile):
-    # print('DEBUG dir2nii')
     if os.path.exists(outputFile):
        return;
-    # print(dirSerie, outputFile)
+       
     dirSaidaSerie = os.path.dirname(outputFile)  
     dirTmp = '%s/tmp' % dirSaidaSerie; 
     if not os.path.exists(dirTmp):
        os.makedirs(dirTmp);
        
     files = os.listdir(dirSerie);
-    # print(files)
     for file in files:
         os.system('gdcmconv -w "%s/%s" "%s/%s" > /dev/null 2>&1' % (dirSerie, file, dirTmp, file));
 
@@ -31,12 +28,8 @@ def dir2nii(dirSerie, outputFile):
     # os.system('dcm2nii -a -g -o "%s" "%s" > /dev/null 2>&1' % (output, output));
     os.system('dcm2niix -m y -z i -o "%s" "%s" > /dev/null 2>&1' % (output, output));    
 
-    # print(dirTmp)
     filesTmp = os.listdir(dirTmp);
-    # print(filesTmp)
     for file in filesTmp:
-        # print(file)
-        # print(file[0])
         if 'nii.gz' in file and file[0] != 'o':
             dataTmp = os.path.join(dirTmp, file) 
             data = nib.load(dataTmp).get_fdata()  
@@ -45,35 +38,29 @@ def dir2nii(dirSerie, outputFile):
 
 
 #
-dirInput  = '/media/SSD2/IDOR/spr-head-ct-age-prediction-challenge/dataset_jpr_train/dataset_jpr_train'
-dirTmp = '/media/SSD2/IDOR/spr-head-ct-age-prediction-challenge/dataset_jpr_train/dataset_36slices/tmp'
-dirOutput = '/media/SSD2/IDOR/spr-head-ct-age-prediction-challenge/dataset_jpr_train/dataset_36slices'
+dirInput  = '/mnt/dados/dataset_jpr_train/dataset_jpr_train'
+dirTmp = '/mnt/dados/dataset_jpr_train/dataset_36slices/tmp'
+dirOutput = '/mnt/dados/dataset_jpr_train/dataset_36slices'
 #
 qtdSlices=36
 #
-print('Starting...')
+
 if not os.path.exists(dirOutput):
     os.makedirs(dirOutput)
-    print('Creating output directory...')
     
-dirNbr = os.listdir(dirInput)
-# print(dirNbr)
+dirNbr = os.listdir(dirInput)  
 for Nbr in dirNbr:   
     pathNbr = dirInput + '/' + Nbr
     
     if os.path.isdir(pathNbr): 
         dirID = os.listdir(pathNbr)
-        # print(dirID)
-        for ID in tqdm(dirID):
+        
+        for ID in dirID:
             pathID = dirInput + '/' + Nbr + '/' + ID 
             
-            # inFile = os.path.join(dirID, f'{ID}.nii.gz')
-            # print('DEBUG loop')
-            # print(dirOutput, ID) 
+            # inFile = os.path.join(dirID, f'{ID}.nii.gz') 
             outFile = os.path.join(dirOutput, f'{ID}.nii.gz')            
             
-            # print(f'Processing {pathID}...')
-            # print(outFile)
             data = dir2nii(pathID, outFile)                   
             
             nSlices = data.shape[2]
@@ -85,7 +72,7 @@ for Nbr in dirNbr:
             for s in normSlices:                
                 dataNew[:,:,z] = data[:,:,s]
                 z+=1
-                
+           
             dataNewNifti = nib.Nifti1Image(dataNew, affine=np.eye(4))    
             nib.save(dataNewNifti, outFile)             
             shutil.rmtree(dirTmp);

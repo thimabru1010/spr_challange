@@ -34,15 +34,13 @@ class HeadCTScan(Dataset):
         labels = self.labels[file_name.split('/')[-1]]
         
         if self.normalize:
-            data = data - self.mean / self.std
+            data = data - data.mean / data.std
             
         data = np.expand_dims(data, axis=1)
             
         if self.transform:
             # For albumentations the image needs to be in shape (H, W, C)
-            transformed = self.transform(image=data.reshape(data.shape[2], data.shape[3], -1), mask=labels)
-            data = transformed['image'].reshape(data.shape[0], data.shape[1], data.shape[2], data.shape[3])
-            labels = transformed['mask']
+            transformed = self.transform(image=data)
         else:
             data = torch.tensor(data)
             labels = torch.tensor(labels)
