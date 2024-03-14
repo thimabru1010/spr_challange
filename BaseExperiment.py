@@ -1,6 +1,6 @@
 import torch
 from tqdm import tqdm
-from openstl.models.simvp_model import SimVP_Model
+from model import RegressionModel
 from segmentation_models_pytorch.losses import FocalLoss
 import torch.nn as nn
 import torch.optim as optm
@@ -35,35 +35,23 @@ class BaseExperiment():
         torch.manual_seed(seed)
         
         print('Input shape:', in_shape)
-        self.model = self._build_model(in_shape, None, custom_model_config)
+        self.model = self._build_model(in_shape, 'resnet34', custom_model_config)
         
         print(summary(self.model, tuple(in_shape)))
         
         self.optm = optm.Adam(self.model.parameters(), lr=custom_training_config['lr'])
         
-        if custom_training_config['amazon_mask']:
-            if custom_training_config['pixel_size'] == '25K':
-                mask = load_tif_image('data/IBAMA_INPE/25K/INPE/tiff/mask.tif')
-            elif custom_training_config['pixel_size'] == '1K':
-                pass
-                # mask = mask_patches
-                # mask = load_tif_image('data/IBAMA_INPE/1K/tiff_filled/mask.tif')
-                # xcut = (mask.shape[0] // custom_training_config['patch_size']) * custom_training_config['patch_size']
-                # ycut = (mask.shape[1] // custom_training_config['patch_size']) * custom_training_config['patch_size']
-                # mask = mask[:img_full_shape[1], :img_full_shape[2]]
-            # mask = None
-            self.loss = WMSELoss(weight=1)
-            self.mae = WMAELoss(weight=1)
-        else:
-            self.loss = nn.MSELoss()
-            self.mae = nn.L1Loss()
-            # mask = None
+        self.loss = WMSELoss(weight=1)
+        self.mae = WMAELoss(weight=1)
+
+        # self.loss = nn.MSELoss()
+        # self.mae = nn.L1Loss()
         
         self.trainloader = trainloader
         self.valloader = valloader
         
-    def _build_model(self, in_shape, nclasses, custom_model_config):
-        return SimVP_Model(in_shape=in_shape, nclasses=nclasses, **custom_model_config).to(self.device)
+    def _build_model(self, in_shape, model_name, custom_model_config):
+        return RegressionModel(in_shape=in_shape, model_name=model_name, **custom_model_config).to(self.device)
     
     def _save_json(self, data, filename):
         with open(os.path.join(self.work_dir_path, filename), 'w') as f:
@@ -78,7 +66,6 @@ class BaseExperiment():
             
             y_pred = self.model(inputs.to(self.device))
             # Get only the first temporal channel
-            y_pred = y_pred[:, 0].contiguous().unsqueeze(1)
             
             loss = self.loss(y_pred, labels.to(self.device))
             loss.backward()
@@ -100,7 +87,6 @@ class BaseExperiment():
             for inputs, labels in tqdm(self.valloader):
                 y_pred = self.model(inputs.to(self.device))
                 # Get only the first temporal channel
-                y_pred = y_pred[:, 0].contiguous().unsqueeze(1)
                 loss = self.loss(y_pred, labels.to(self.device))
                 mae = self.mae(y_pred, labels.to(self.device))
                 
@@ -135,8 +121,8 @@ class BaseExperiment():
             
             print(f"Epoch {epoch}: Train Loss = {train_loss:.6f} | Validation Loss = {val_loss:.6f} | Validation MAE = {val_mae:.6f}")
 
-def _build_model(in_shape, nclasses, custom_model_config, device):
-    return SimVP_Model(in_shape=in_shape, nclasses=nclasses, **custom_model_config).to(device)
+def _build_model(self, in_shape, model_name, custom_model_config):
+    return RegressionModel(in_shape=in_shape, model_name=model_name, **custom_model_config).to(self.device)
 
 def test_model(testloader, custom_training_config, custom_model_config):
     work_dir_path = os.path.join('work_dirs', custom_training_config['ex_name'])
