@@ -6,24 +6,22 @@ import torch.nn as nn
 import torch.optim as optm
 import os
 import json
-from metrics import confusion_matrix, f1_score
 import numpy as np
 import torch.nn.functional as F
 from torchsummary import summary
-from preprocess import load_tif_image, preprocess_patches, divide_pred_windows, reconstruct_sorted_patches, reconstruct_time_patches
 
 from sklearn.metrics import f1_score as skf1_score
 from CustomLosses import WMSELoss, WMAELoss
 
 class BaseExperiment():
-    def __init__(self, trainloader, valloader, custom_model_config, custom_training_config, seed=42):
+    def __init__(self, trainloader, valloader, custom_training_config, seed=42):
         # TODO: wrap into a function to create work dir
         # Create work dir
         self.work_dir_path = os.path.join('work_dirs', custom_training_config['ex_name'])
         if not os.path.exists(self.work_dir_path):
             os.makedirs(self.work_dir_path)
             
-        self._save_json(custom_model_config, 'model_config.json')
+        # self._save_json(custom_model_config, 'model_config.json')
         self._save_json(custom_training_config, 'model_training.json')
             
         self.epochs = custom_training_config['epoch']
@@ -35,7 +33,7 @@ class BaseExperiment():
         torch.manual_seed(seed)
         
         print('Input shape:', in_shape)
-        self.model = self._build_model(in_shape, 'resnet34', custom_model_config)
+        self.model = self._build_model(in_shape, 'resnet34')
         
         print(summary(self.model, tuple(in_shape)))
         
@@ -50,8 +48,8 @@ class BaseExperiment():
         self.trainloader = trainloader
         self.valloader = valloader
         
-    def _build_model(self, in_shape, model_name, custom_model_config):
-        return RegressionModel(in_shape=in_shape, model_name=model_name, **custom_model_config).to(self.device)
+    def _build_model(self, in_shape, model_name):
+        return RegressionModel(in_shape=in_shape, model_name=model_name).to(self.device)
     
     def _save_json(self, data, filename):
         with open(os.path.join(self.work_dir_path, filename), 'w') as f:
@@ -129,7 +127,7 @@ def test_model(testloader, custom_training_config, custom_model_config):
     device = "cuda:0"
     in_shape = custom_training_config['in_shape']
         
-    model = _build_model(in_shape, None, custom_model_config, device)
+    model = _build_model(in_shape, custom_model_config['model_name'], custom_model_config, device)
     model.load_state_dict(torch.load(os.path.join(work_dir_path, 'checkpoint.pth')))
     # model.load_state_dict(os.path.join(work_dir_path, 'checkpoint.pth')).to(device)
     model.eval()
@@ -153,70 +151,45 @@ def test_model(testloader, custom_training_config, custom_model_config):
             #     continue
             y_pred = model(inputs.to(device))
             # Get only the first temporal channel
-            y_pred = y_pred[:, 0].contiguous().unsqueeze(1)
+            y_pred = y_pred.unsqueeze(1)
             
-            if torch.all(labels == -1):
-                skip_cont += 1
-                # continue
-                loss = mse(y_pred, labels.to(device))
-                _mae = mae(y_pred, labels.to(device))
-                    
-                test_loss += loss.detach()
-                test_mae += _mae.detach()
+            loss = mse(y_pred, labels.to(device))
+            _mae = mae(y_pred, labels.to(device))
+                
+            test_loss += loss.detach()
+            test_mae += _mae.detach()
             
             # print(y_pred.cpu().numpy()[0, 0, 0].shape)
-            preds.append(y_pred.cpu().numpy()[0, 0, 0])  
+            # preds.append(y_pred.cpu().numpy()[0, 0, 0])  
 
         test_loss = test_loss / (len(testloader) - skip_cont)
         test_mae = test_mae / (len(testloader) - skip_cont)
     
     print("======== Metrics ========")
     print(f'MSE: {test_loss:.6f} | MAE: {test_mae:.6f}')
-    preds = np.stack(preds, axis=0)
-    print(preds.shape)
-    
-    # 44 = 46 - 2
-    # div_time = preds.shape[0] // 44
-    # patches = []
-    # for i in range(0, div_time):
-    #     windowed_patch = preds[i * 44: (i + 1) * 44]
-    #     print(windowed_patch.shape)
-    #     patches.append(windowed_patch)
-    #     # print(patches.shape)
-    # patches = np.stack(patches, axis=0)
-    # print(patches.shape)
-    
-    # images_reconstructed = []
-    # for i in range(patches.shape[1]):
-    #     print(patches[i].shape)
-    #     img_reconstructed = reconstruct_sorted_patches(patches[:, i], (2333, 3005), patch_size=64)
-    #     print(img_reconstructed.shape)
-    #     images_reconstructed.append(img_reconstructed)
-        
-    # np.save('reconstructed_images.npy', np.stack(images_reconstructed, axis=0))
-    _ = reconstruct_time_patches(preds, patch_size=64, time_idx=44, original_img_shape=(2333, 3005))
-    1/0
+    # preds = np.stack(preds, axis=0)
+    # print(preds.shape)
     
     #! Baseline test
-    # Check if the model outputed zero por all pixels
-    test_loss = 0.0
-    test_mae = 0.0
-    # Disable gradient computation and reduce memory consumption.
-    for inputs, labels in tqdm(testloader):
-        # y_pred = model(inputs.to(device))
-        if torch.all(labels == -1):
-            skip_cont += 1
-            continue
-        y_pred = torch.zeros_like(labels)
+    # # Check if the model outputed zero por all pixels
+    # test_loss = 0.0
+    # test_mae = 0.0
+    # # Disable gradient computation and reduce memory consumption.
+    # for inputs, labels in tqdm(testloader):
+    #     # y_pred = model(inputs.to(device))
+    #     if torch.all(labels == -1):
+    #         skip_cont += 1
+    #         continue
+    #     y_pred = torch.zeros_like(labels)
         
-        loss = mse(y_pred, labels)
-        _mae = mae(y_pred, labels)
+    #     loss = mse(y_pred, labels)
+    #     _mae = mae(y_pred, labels)
             
-        test_loss += loss.detach()
-        test_mae += _mae.detach()
+    #     test_loss += loss.detach()
+    #     test_mae += _mae.detach()
 
-    test_loss = test_loss / (len(testloader) - skip_cont)
-    test_mae = test_mae / (len(testloader) - skip_cont)
+    # test_loss = test_loss / (len(testloader) - skip_cont)
+    # test_mae = test_mae / (len(testloader) - skip_cont)
     
-    print("======== Zero Pred Baseline Metrics ========")
-    print(f'MSE: {test_loss:.6f} | MAE: {test_mae:.6f}')
+    # print("======== Zero Pred Baseline Metrics ========")
+    # print(f'MSE: {test_loss:.6f} | MAE: {test_mae:.6f}')

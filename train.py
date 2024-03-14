@@ -5,24 +5,25 @@ import numpy as np
 import json
 import pandas as pd
 from BaseExperiment import BaseExperiment, test_model
+from Dataset import HeadCTScan
+from utils import read_files
+from sklearn.model_selection import train_test_split
 
 batch_size = 16
 num_workers = 8
 Debug = False
-pixel_size = '1K'
 
-patch_size = 64
-overlap = 0.1
-window_size = 3
-min_def = 0.02
-
-root_dir = Path(f'/home/thiago/AmazonDeforestation_Prediction/OpenSTL/data/IBAMA_INPE/{pixel_size}')
+root_dir = Path('/media/SSD2/IDOR/spr-head-ct-age-prediction-challenge/dataset_jpr_train/dataset_jpr_train')
 print(root_dir)
 
 transform = None
 
 # TODO: Load Dataset here
+data_files = read_files(root_dir, Debug)
+train_files, val_files = train_test_split(data_files, test_size=0.2, random_state=42)
 
+train_set = HeadCTScan(train_files, transform=transform, Debug=Debug)
+val_set = HeadCTScan(val_files, transform=transform, Debug=Debug)
 print(len(train_set), len(val_set))
 
 dataloader_train = torch.utils.data.DataLoader(
@@ -46,19 +47,15 @@ custom_training_config = {
     'dataname': 'custom',
     'patience': 10,
     'delta': 0.0001,
-    'amazon_mask': True,
-    'pixel_size': pixel_size,
-    'patch_size': patch_size,
-    'overlap': overlap
+    'in_shape': (36, 512, 512)
 }
 
-exp = BaseExperiment(dataloader_train, dataloader_val, custom_model_config, custom_training_config)
+exp = BaseExperiment(dataloader_train, dataloader_val, custom_training_config)
 
 exp.train()
 
-test_data, mask_test_data = train_set.get_test_set()
-test_set = IbamaDETER1km_Dataset(root_dir=root_dir, Debug=Debug, mode='val', val_data=test_data,\
-    mask_val_data=mask_test_data, means=[train_set.mean], stds=[train_set.std])
+test_set = HeadCTScan(root_dir=root_dir, Debug=Debug, mode='val', val_data=test_data,\
+    means=[train_set.mean], stds=[train_set.std])
 
 dataloader_test = torch.utils.data.DataLoader(
     test_set, batch_size=1, shuffle=False, pin_memory=True)
