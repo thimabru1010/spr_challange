@@ -10,7 +10,7 @@ from utils import read_files
 from sklearn.model_selection import train_test_split
 import os
 
-batch_size = 64
+batch_size = 32
 num_workers = 8
 Debug = False
 
