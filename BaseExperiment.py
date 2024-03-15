@@ -1,7 +1,7 @@
 import torch
 from tqdm import tqdm
 from model import RegressionModel
-from segmentation_models_pytorch.losses import FocalLoss
+# from segmentation_models_pytorch.losses import FocalLoss
 import torch.nn as nn
 import torch.optim as optm
 import os
