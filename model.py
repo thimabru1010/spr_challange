@@ -40,7 +40,7 @@ class RegressionModel(nn.Module):
         
     def forward(self, x):
         y = self.model(x)
-        print(y.shape)
+        # print(y.shape)
         y = self.fc(y)
         return y
         return self.model(x)

@@ -1,0 +1,13 @@
+/mnt/dados/dataset_jpr_train/dataset_jpr_train/1/002419 - (512, 512, 57, 2)
+/mnt/dados/dataset_jpr_train/dataset_jpr_train/1/002635 - (512, 512, 149, 2)
+/mnt/dados/dataset_jpr_train/dataset_jpr_train/1/002654 - (512, 512, 139, 2)
+/mnt/dados/dataset_jpr_train/dataset_jpr_train/1/002485 - (512, 512, 70, 2)
+/mnt/dados/dataset_jpr_train/dataset_jpr_train/1/002476 - (512, 512, 313, 2)
+/mnt/dados/dataset_jpr_train/dataset_jpr_train/1/002608 - (512, 512, 139, 2)
+/mnt/dados/dataset_jpr_train/dataset_jpr_train/1/002364 - (512, 512, 69, 2)
+/mnt/dados/dataset_jpr_train/dataset_jpr_train/1/002361 - (512, 512, 137, 2)
+/mnt/dados/dataset_jpr_train/dataset_jpr_train/1/002367 - (512, 512, 303, 2)
+/mnt/dados/dataset_jpr_train/dataset_jpr_train/1/002408 - (512, 512, 289, 2)
+/mnt/dados/dataset_jpr_train/dataset_jpr_train/1/002655 - (512, 512, 70, 2)
+/mnt/dados/dataset_jpr_train/dataset_jpr_train/3/001029 - (512, 512, 257, 2)
+

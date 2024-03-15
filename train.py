@@ -8,22 +8,24 @@ from BaseExperiment import BaseExperiment, test_model
 from Dataset import HeadCTScan
 from utils import read_files
 from sklearn.model_selection import train_test_split
+import os
 
-batch_size = 16
+batch_size = 8
 num_workers = 8
 Debug = False
 
-root_dir = Path('/media/SSD2/IDOR/spr-head-ct-age-prediction-challenge/dataset_jpr_train/dataset_jpr_train')
+root_dir = Path('/media/SSD2/IDOR/spr-head-ct-age-prediction-challenge/dataset_jpr_train/dataset_36slices')
 print(root_dir)
 
 transform = None
 
 # TODO: Load Dataset here
-data_files = read_files(root_dir, Debug)
-train_files, val_files = train_test_split(data_files, test_size=0.2, random_state=42)
+# data_files = read_files(root_dir, Debug)
+filenames = os.listdir(root_dir)
+train_files, val_files = train_test_split(filenames, test_size=0.2, random_state=42)
 
-train_set = HeadCTScan(train_files, transform=transform, Debug=Debug)
-val_set = HeadCTScan(val_files, transform=transform, Debug=Debug)
+train_set = HeadCTScan(root_dir, train_files, transform=transform, Debug=Debug)
+val_set = HeadCTScan(root_dir, val_files, transform=transform, Debug=Debug)
 print(len(train_set), len(val_set))
 
 dataloader_train = torch.utils.data.DataLoader(
