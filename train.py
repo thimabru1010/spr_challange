@@ -10,8 +10,8 @@ from utils import read_files
 from sklearn.model_selection import train_test_split
 import os
 
-batch_size = 32
-num_workers = 10
+batch_size = 64
+num_workers = 8
 Debug = False
 
 # root_dir = Path('/media/SSD2/IDOR/spr-head-ct-age-prediction-challenge/dataset_jpr_train/dataset_36slices')
