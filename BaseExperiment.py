@@ -27,7 +27,9 @@ class BaseExperiment():
         self.epochs = custom_training_config['epoch']
         self.patience = custom_training_config['patience']
         self.delta = custom_training_config['delta']
-        self.device = "cuda:0"
+        # self.device = "cuda:0"
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(f'Using device: {self.device}')
         in_shape = custom_training_config['in_shape']
         # img_full_shape = custom_training_config['img_shape']
         torch.manual_seed(seed)
@@ -36,6 +38,7 @@ class BaseExperiment():
         self.model = self._build_model(in_shape, 'resnet34')
         
         print(summary(self.model, tuple(in_shape)))
+        self.model= nn.DataParallel(self.model)
         
         self.optm = optm.Adam(self.model.parameters(), lr=custom_training_config['lr'])
         
