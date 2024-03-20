@@ -9,13 +9,24 @@ from Dataset import HeadCTScan
 from utils import read_files
 from sklearn.model_selection import train_test_split
 import os
+import argparse
 
-batch_size = 32
-num_workers = 8
-Debug = False
+# Argparsers
+parser = argparse.ArgumentParser()
+parser.add_argument('--root_dir', type=str, default='/mnt/dados/dataset_jpr_train/dataset_36slices', help='Path to the dataset')
+parser.add_argument('--batch_size', type=int, default=32, help='Batch Size')
+parser.add_argument('--num_workers', type=int, default=8, help='Number of Workers in Dataloader')
+parser.add_argument('--debug', action='store_false' ,help='Activate Debug Mode')
+parser.add_argument('--exp_name', type=str, default='exp01', help='Experiment Name')
+args = parser.parse_args()
+
+batch_size = args.batch_size
+num_workers = args.num_workers
+Debug = args.debug
+root_dir = Path(args.root_dir)
 
 # root_dir = Path('/media/SSD2/IDOR/spr-head-ct-age-prediction-challenge/dataset_jpr_train/dataset_36slices')
-root_dir = Path('/mnt/dados/dataset_jpr_train/dataset_36slices')
+# root_dir = Path('/mnt/dados/dataset_jpr_train/dataset_36slices')
 # /mnt/dados/dataset_jpr_train/dataset_36slices
 
 print(root_dir)
@@ -38,18 +49,11 @@ dataloader_val = torch.utils.data.DataLoader(
     
 # Exp17 training with categories 2 in input
 custom_training_config = {
-    'pre_seq_length': 2,
-    'aft_seq_length': 1,
-    'total_length': 3,
     'batch_size': batch_size,
     'val_batch_size': batch_size,
     'epoch': 100,
     'lr': 1e-4,
-    # 'metrics': ['mse', 'mae', 'acc', 'Recall', 'Precision', 'f1_score', 'CM'],
-    'metrics': ['mse', 'mae'],
-
-    'ex_name': 'custom_exp09', # custom_exp
-    'dataname': 'custom',
+    'ex_name': args.exp_name, # custom_exp
     'patience': 10,
     'delta': 0.0001,
     'in_shape': (36, 512, 512)
