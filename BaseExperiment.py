@@ -6,6 +6,8 @@ import torch.nn as nn
 import torch.optim as optm
 import os
 import json
+import pandas as pd
+from tqdm import tqdm
 import numpy as np
 import torch.nn.functional as F
 from torchsummary import summary
@@ -61,7 +63,7 @@ class BaseExperiment():
     def train_one_epoch(self):
         train_loss = 0
         self.model.train(True)
-        for inputs, labels in tqdm(self.trainloader):
+        for inputs, labels, _ in tqdm(self.trainloader):
             # Zero your gradients for every batch!
             self.optm.zero_grad()
             
@@ -85,7 +87,7 @@ class BaseExperiment():
         self.model.eval()
         # Disable gradient computation and reduce memory consumption.
         with torch.no_grad():
-            for inputs, labels in tqdm(self.valloader):
+            for inputs, labels, _ in tqdm(self.valloader):
                 y_pred = self.model(inputs.to(self.device))
                 # Get only the first temporal channel
                 loss = self.loss(y_pred, labels.to(self.device))
@@ -122,18 +124,22 @@ class BaseExperiment():
             
             print(f"Epoch {epoch}: Train Loss = {train_loss:.6f} | Validation Loss = {val_loss:.6f} | Validation MAE = {val_mae:.6f}")
 
-def _build_model(self, in_shape, model_name, custom_model_config):
-    return RegressionModel(in_shape=in_shape, model_name=model_name, **custom_model_config).to(self.device)
-
-def test_model(testloader, custom_training_config, custom_model_config):
+def _build_model(in_shape, model_name):
+    return RegressionModel(in_shape=in_shape, model_name=model_name)
+    
+def test_model(testloader, custom_training_config):
     work_dir_path = os.path.join('work_dirs', custom_training_config['ex_name'])
-    device = "cuda:0"
+    
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
     in_shape = custom_training_config['in_shape']
         
-    model = _build_model(in_shape, custom_model_config['model_name'], custom_model_config, device)
+    model = _build_model(in_shape, 'resnet34').to(device)
+    
+    model= nn.DataParallel(model)
     model.load_state_dict(torch.load(os.path.join(work_dir_path, 'checkpoint.pth')))
-    # model.load_state_dict(os.path.join(work_dir_path, 'checkpoint.pth')).to(device)
     model.eval()
+    # model= nn.DataParallel(model)
     
     # mse = nn.MSELoss()
     mse = WMSELoss(weight=1)
@@ -144,55 +150,43 @@ def test_model(testloader, custom_training_config, custom_model_config):
     test_mae = 0.0
     # cm = np.zeros((2, 2), dtype=int)
     # Disable gradient computation and reduce memory consumption.
-    skip_cont = 0
     preds = []
+    ids = []
     with torch.no_grad():
-        for inputs, labels in tqdm(testloader):
-            # Check if all pixels are -1
-            # if torch.all(labels == -1):
-            #     skip_cont += 1
-            #     continue
+        for inputs, study_id in tqdm(testloader):
             y_pred = model(inputs.to(device))
-            # Get only the first temporal channel
-            y_pred = y_pred.unsqueeze(1)
             
-            loss = mse(y_pred, labels.to(device))
-            _mae = mae(y_pred, labels.to(device))
+            # loss = mse(y_pred, labels.to(device))
+            # _mae = mae(y_pred, labels.to(device))
                 
-            test_loss += loss.detach()
-            test_mae += _mae.detach()
+            # test_loss += loss.detach()
+            # test_mae += _mae.detach()
             
-            # print(y_pred.cpu().numpy()[0, 0, 0].shape)
-            # preds.append(y_pred.cpu().numpy()[0, 0, 0])  
-
-        test_loss = test_loss / (len(testloader) - skip_cont)
-        test_mae = test_mae / (len(testloader) - skip_cont)
-    
-    print("======== Metrics ========")
-    print(f'MSE: {test_loss:.6f} | MAE: {test_mae:.6f}')
-    # preds = np.stack(preds, axis=0)
-    # print(preds.shape)
-    
-    #! Baseline test
-    # # Check if the model outputed zero por all pixels
-    # test_loss = 0.0
-    # test_mae = 0.0
-    # # Disable gradient computation and reduce memory consumption.
-    # for inputs, labels in tqdm(testloader):
-    #     # y_pred = model(inputs.to(device))
-    #     if torch.all(labels == -1):
-    #         skip_cont += 1
-    #         continue
-    #     y_pred = torch.zeros_like(labels)
-        
-    #     loss = mse(y_pred, labels)
-    #     _mae = mae(y_pred, labels)
             
-    #     test_loss += loss.detach()
-    #     test_mae += _mae.detach()
+            y_pred = y_pred.cpu()[:, 0]
+            # print(study_id.shape, y_pred.shape)
+            
+            # preds.append([study_id, y_pred])
+            preds.append(y_pred)
+            ids.append(study_id)
 
-    # test_loss = test_loss / (len(testloader) - skip_cont)
-    # test_mae = test_mae / (len(testloader) - skip_cont)
+        test_loss = test_loss / (len(testloader))
+        test_mae = test_mae / (len(testloader))
     
-    # print("======== Zero Pred Baseline Metrics ========")
+    # print("======== Metrics ========")
     # print(f'MSE: {test_loss:.6f} | MAE: {test_mae:.6f}')
+    
+    preds = np.concatenate(preds, axis=0)
+    study_ids = np.concatenate(ids, axis=0)
+    preds_ids = np.stack([study_ids, preds], axis=0)
+    
+    print(preds.shape, study_ids.shape)
+    # np.save(os.path.join(work_dir_path, 'predictions.npy'), preds)
+    
+    df = pd.DataFrame(preds_ids.T, columns=['StudyID', 'Age'])
+    # df = df['StudyID', 'Age']
+    df['StudyID'] = df['StudyID'].astype(int)
+    # df['StudyID'] = df['StudyID'].apply(lambda x: str(x).str.zfill(5))
+    df.to_csv(os.path.join(work_dir_path, 'submission_preds.csv'), index=False)
+    df['Age'] = df['Age'].round()
+    df.to_csv(os.path.join(work_dir_path, 'submission.csv'), index=False)

@@ -11,7 +11,7 @@ import nibabel as nib
 
 class HeadCTScan(Dataset):
     def __init__(self, root_dir: Path, data_files: list, normalize: bool=True, transform: torchvision.transforms=None,
-                Debug: bool=False, means=None, stds=None):
+                Debug: bool=False):
         super(HeadCTScan, self).__init__()
         
         self.root_dir = root_dir
@@ -56,4 +56,48 @@ class HeadCTScan(Dataset):
             labels = torch.tensor(labels)
         # print(data.shape, labels.shape)
         # print(data.dtype, labels.dtype)
-        return data, labels.unsqueeze(0)
+        return data, labels.unsqueeze(0), int(file_name.split('.')[0])
+
+
+class HeadCTScan_TestSubmission(Dataset):
+    def __init__(self, root_dir: Path, data_files: list, normalize: bool=True, transform: torchvision.transforms=None,
+                Debug: bool=False):
+        super(HeadCTScan_TestSubmission, self).__init__()
+        
+        self.root_dir = root_dir
+        self.data_files = data_files
+        if Debug:
+            self.data_files = self.data_files[:20]
+        
+        # self.labels = pd.read_csv('/media/SSD2/IDOR/spr-head-ct-age-prediction-challenge/train.csv')
+        # self.labels = pd.read_csv('/mnt/dados/train.csv')
+        # self.labels['StudyID'] = self.labels['StudyID'].apply(lambda x: x.lstrip('0'))
+        # self.labels = self.labels.set_index('StudyID').to_dict()['Age']
+
+        self.normalize = normalize
+        self.transform = transform
+    
+    def __len__(self):
+        return len(self.data_files)
+
+    def __getitem__(self, index):
+        file_name = self.data_files[index]
+        
+        data = nib.load(self.root_dir / file_name).get_fdata()
+        data = data.transpose(2, 0, 1)
+        data = data[:, :512, :512]
+
+        # labels = self.labels[file_name.split('/')[-1].split('.')[0].lstrip('0')]
+        
+        if self.normalize:
+            data = data - data.mean() / data.std()
+            
+        if self.transform:
+            data = self.transform(data)
+        else:
+            data = torch.tensor(data, dtype=torch.float32)
+            # labels = torch.tensor(labels)
+        # print(data.shape, labels.shape)
+        # print(data.dtype, labels.dtype)
+        # print(int(file_name.split('.')[0]))
+        return data, int(file_name.split('.')[0])
