@@ -21,6 +21,7 @@ parser.add_argument('--debug', action='store_false',help='Activate Debug Mode')
 parser.add_argument('--exp_name', type=str, default='custom_exp09', help='Experiment Name')
 parser.add_argument('--deactivate_test', action='store_true', help='Deactivate Test')
 parser.add_argument('--deactivate_train', action='store_true', help='Deactivate Train')
+parser.add_argument('--aux_clssf', action='store_true', help='Activates auxiliary classification head for the model')
 args = parser.parse_args()
 
 batch_size = args.batch_size
@@ -45,7 +46,8 @@ training_config = {
     'ex_name': args.exp_name, 
     'patience': 10,
     'delta': 0.0001,
-    'in_shape': (36, 512, 512)
+    'in_shape': (36, 512, 512),
+    'classification_head': args.aux_clssf,
 }
 
 if not args.deactivate_train:

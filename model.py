@@ -5,7 +5,7 @@ from torchsummary import summary
 # from torchinfo import summary
 
 class RegressionModel(nn.Module):
-    def __init__(self, in_shape, model_name, **kwargs):
+    def __init__(self, in_shape, model_name, aux_clssf=False, **kwargs):
         super(RegressionModel, self).__init__()
         self.in_shape = in_shape
         if model_name == 'resnet50':
@@ -35,15 +35,20 @@ class RegressionModel(nn.Module):
         self.model.fc = nn.Identity()
         self.fc = nn.Linear(512, 1)
         
+        self.fc2 = nn.Identity()
+        if aux_clssf:
+            self.fc2 = nn.Linear(512, 3)
+        
+        
         # print(self.model)
-        summary(self.model, tuple(self.in_shape), device='cpu')
+        # summary(self.model, tuple(self.in_shape), device='cpu')
         
     def forward(self, x):
         y = self.model(x)
         # print(y.shape)
-        y = self.fc(y)
-        return y
-        return self.model(x)
+        y_reg = self.fc(y)
+        y_clssf = self.fc2(y)
+        return y_reg, y_clssf
     
 if __name__ == '__main__':
     model = RegressionModel(in_shape=(36, 512, 512), model_name='resnet34')

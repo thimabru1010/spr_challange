@@ -19,8 +19,8 @@ class HeadCTScan(Dataset):
         if Debug:
             self.data_files = self.data_files[:20]
         
-        # self.labels = pd.read_csv('/media/SSD2/IDOR/spr-head-ct-age-prediction-challenge/train.csv')
-        self.labels = pd.read_csv('/mnt/dados/train.csv')
+        self.labels = pd.read_csv('/media/SSD2/IDOR/spr-head-ct-age-prediction-challenge/train.csv')
+        # self.labels = pd.read_csv('/mnt/dados/train.csv')
         self.labels['StudyID'] = self.labels['StudyID'].apply(lambda x: x.lstrip('0'))
         self.labels = self.labels.set_index('StudyID').to_dict()['Age']
         # print(self.labels)

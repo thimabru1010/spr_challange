@@ -16,33 +16,33 @@ from sklearn.metrics import f1_score as skf1_score
 from CustomLosses import WMSELoss, WMAELoss
 
 class BaseExperiment():
-    def __init__(self, trainloader, valloader, custom_training_config, seed=42):
+    def __init__(self, trainloader, valloader, training_config, seed=42):
         # TODO: wrap into a function to create work dir
         # Create work dir
-        self.work_dir_path = os.path.join('work_dirs', custom_training_config['ex_name'])
+        self.work_dir_path = os.path.join('work_dirs', training_config['ex_name'])
         if not os.path.exists(self.work_dir_path):
             os.makedirs(self.work_dir_path)
             
         # self._save_json(custom_model_config, 'model_config.json')
-        self._save_json(custom_training_config, 'model_training.json')
+        self._save_json(training_config, 'model_training.json')
             
-        self.epochs = custom_training_config['epoch']
-        self.patience = custom_training_config['patience']
-        self.delta = custom_training_config['delta']
+        self.epochs = training_config['epoch']
+        self.patience = training_config['patience']
+        self.delta = training_config['delta']
         # self.device = "cuda:0"
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print(f'Using device: {self.device}')
-        in_shape = custom_training_config['in_shape']
-        # img_full_shape = custom_training_config['img_shape']
+        in_shape = training_config['in_shape']
+        # img_full_shape = training_config['img_shape']
         torch.manual_seed(seed)
         
         print('Input shape:', in_shape)
-        self.model = self._build_model(in_shape, 'resnet34')
+        self.model = self._build_model(in_shape, 'resnet34', training_config['classification_head'])
         
         print(summary(self.model, tuple(in_shape)))
         self.model= nn.DataParallel(self.model)
         
-        self.optm = optm.Adam(self.model.parameters(), lr=custom_training_config['lr'])
+        self.optm = optm.Adam(self.model.parameters(), lr=training_config['lr'])
         
         self.loss = WMSELoss(weight=1)
         self.mae = WMAELoss(weight=1)
@@ -53,8 +53,8 @@ class BaseExperiment():
         self.trainloader = trainloader
         self.valloader = valloader
         
-    def _build_model(self, in_shape, model_name):
-        return RegressionModel(in_shape=in_shape, model_name=model_name).to(self.device)
+    def _build_model(self, in_shape, model_name, aux_clssf=False):
+        return RegressionModel(in_shape=in_shape, model_name=model_name, aux_clssf=aux_clssf).to(self.device)
     
     def _save_json(self, data, filename):
         with open(os.path.join(self.work_dir_path, filename), 'w') as f:
@@ -67,7 +67,7 @@ class BaseExperiment():
             # Zero your gradients for every batch!
             self.optm.zero_grad()
             
-            y_pred = self.model(inputs.to(self.device))
+            y_pred, y_clssf = self.model(inputs.to(self.device))
             # Get only the first temporal channel
             
             loss = self.loss(y_pred, labels.to(self.device))
@@ -88,7 +88,7 @@ class BaseExperiment():
         # Disable gradient computation and reduce memory consumption.
         with torch.no_grad():
             for inputs, labels, _ in tqdm(self.valloader):
-                y_pred = self.model(inputs.to(self.device))
+                y_pred, y_clssf = self.model(inputs.to(self.device))
                 # Get only the first temporal channel
                 loss = self.loss(y_pred, labels.to(self.device))
                 mae = self.mae(y_pred, labels.to(self.device))
@@ -124,17 +124,20 @@ class BaseExperiment():
             
             print(f"Epoch {epoch}: Train Loss = {train_loss:.6f} | Validation Loss = {val_loss:.6f} | Validation MAE = {val_mae:.6f}")
 
-def _build_model(in_shape, model_name):
-    return RegressionModel(in_shape=in_shape, model_name=model_name)
+def _build_model(self, in_shape, model_name, aux_clssf=False):
+    return RegressionModel(in_shape=in_shape, model_name=model_name, aux_clssf=aux_clssf).to(self.device)
     
-def test_model(testloader, custom_training_config):
-    work_dir_path = os.path.join('work_dirs', custom_training_config['ex_name'])
+# def _build_model(in_shape, model_name):
+#     return RegressionModel(in_shape=in_shape, model_name=model_name)
+    
+def test_model(testloader, training_config):
+    work_dir_path = os.path.join('work_dirs', training_config['ex_name'])
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
-    in_shape = custom_training_config['in_shape']
+    in_shape = training_config['in_shape']
         
-    model = _build_model(in_shape, 'resnet34').to(device)
+    model = _build_model(in_shape, 'resnet34', training_config['classification_head']).to(device)
     
     model= nn.DataParallel(model)
     model.load_state_dict(torch.load(os.path.join(work_dir_path, 'checkpoint.pth')))
@@ -154,7 +157,7 @@ def test_model(testloader, custom_training_config):
     ids = []
     with torch.no_grad():
         for inputs, study_id in tqdm(testloader):
-            y_pred = model(inputs.to(device))
+            y_pred, y_clssf = model(inputs.to(device))
             
             # loss = mse(y_pred, labels.to(device))
             # _mae = mae(y_pred, labels.to(device))
