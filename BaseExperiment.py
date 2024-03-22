@@ -36,8 +36,9 @@ class BaseExperiment():
         # img_full_shape = training_config['img_shape']
         torch.manual_seed(seed)
         
+        self.aux_clssf = training_config['classification_head']
         print('Input shape:', in_shape)
-        self.model = self._build_model(in_shape, 'resnet34', training_config['classification_head'])
+        self.model = self._build_model(in_shape, 'resnet34', self.aux_clssf)
         
         print(summary(self.model, tuple(in_shape)))
         self.model= nn.DataParallel(self.model)
@@ -46,6 +47,10 @@ class BaseExperiment():
         
         self.loss = WMSELoss(weight=1)
         self.mae = WMAELoss(weight=1)
+        
+        self.ce = nn.CrossEntropyLoss()
+        if training_config['clssf_weights'] is not None:
+            self.ce = nn.CrossEntropyLoss(weights=torch.Tensor(training_config['clssf_weights']))
 
         # self.loss = nn.MSELoss()
         # self.mae = nn.L1Loss()
@@ -62,53 +67,78 @@ class BaseExperiment():
             
     def train_one_epoch(self):
         train_loss = 0
+        
+        sum_clssf_loss = 0
+        sum_reg_loss = 0
         self.model.train(True)
-        for inputs, labels, _ in tqdm(self.trainloader):
+        for inputs, labels, _, group in tqdm(self.trainloader):
             # Zero your gradients for every batch!
             self.optm.zero_grad()
             
             y_pred, y_clssf = self.model(inputs.to(self.device))
-            # Get only the first temporal channel
             
             loss = self.loss(y_pred, labels.to(self.device))
-            loss.backward()
+            
+            clssf_loss = self.ce(y_clssf, group.to(self.device))
+            
+            total_loss = loss
+            if self.aux_clssf:
+                total_loss = loss + clssf_loss
+                
+            total_loss.backward()
             
             # Adjust learning weights
             self.optm.step()
             
-            train_loss += loss.detach()
+            train_loss += total_loss.detach()
+            sum_clssf_loss += clssf_loss.detach()
+            sum_reg_loss += loss.detach()
+            
         train_loss = train_loss / len(self.trainloader)
+        sum_clssf_loss = sum_clssf_loss / len(self.trainloader)
+        sum_reg_loss = sum_reg_loss / len(self.trainloader)
         
-        return train_loss
+        return train_loss, sum_clssf_loss, sum_reg_loss
 
     def validate_one_epoch(self):
         val_loss = 0
         val_mae = 0
+        val_mse = 0
+        val_ce = 0
         self.model.eval()
         # Disable gradient computation and reduce memory consumption.
         with torch.no_grad():
-            for inputs, labels, _ in tqdm(self.valloader):
+            for inputs, labels, _, group in tqdm(self.valloader):
                 y_pred, y_clssf = self.model(inputs.to(self.device))
-                # Get only the first temporal channel
+                
                 loss = self.loss(y_pred, labels.to(self.device))
                 mae = self.mae(y_pred, labels.to(self.device))
+                clssf_loss = self.ce(y_clssf, group.to(self.device))
                 
-                val_loss += loss.detach()
+                total_loss = loss
+                if self.aux_clssf:
+                    total_loss = loss + clssf_loss
+                
+                val_loss += total_loss.detach()
                 val_mae += mae.detach()
+                val_mse += loss.detach()
+                val_ce += clssf_loss.detach()
             
         val_loss = val_loss / len(self.valloader)
         val_mae = val_mae / len(self.valloader)
+        val_mse = val_mse / len(self.valloader)
+        val_ce = val_ce / len(self.valloader)
         
-        return val_loss, val_mae
+        return val_loss, val_mae, val_mse, val_ce
     
     def train(self):
         min_val_loss = float('inf')
         early_stop_counter = 0
         for epoch in range(self.epochs):
             
-            train_loss = self.train_one_epoch()
+            train_loss, sum_clssf_loss, sum_reg_loss = self.train_one_epoch()
             
-            val_loss, val_mae = self.validate_one_epoch()
+            val_loss, val_mae, val_mse, val_ce = self.validate_one_epoch()
             
             if val_loss + self.delta < min_val_loss:
                 min_val_loss = val_loss
@@ -122,8 +152,9 @@ class BaseExperiment():
                 print(f'Early Stopping! Early Stopping counter: {early_stop_counter}')
                 break
             
-            print(f"Epoch {epoch}: Train Loss = {train_loss:.6f} | Validation Loss = {val_loss:.6f} | Validation MAE = {val_mae:.6f}")
-
+            # print(f"Epoch {epoch}: Train Loss = {train_loss:.6f} | Validation Loss = {val_loss:.6f} | Validation MAE = {val_mae:.6f}")
+            print(f"Epoch {epoch}: Train Loss = {train_loss:.6f} | MSE Loss = {sum_reg_loss:.6f} | CE Loss = {sum_clssf_loss:.6f} | Validation Loss = {val_loss:.6f} | Validation MSE = {val_mse:.6f} | Validation MAE = {val_mae:.6f} | Validation CE = {val_ce:.6f}")
+            
 def _build_model(self, in_shape, model_name, aux_clssf=False):
     return RegressionModel(in_shape=in_shape, model_name=model_name, aux_clssf=aux_clssf).to(self.device)
     
@@ -157,7 +188,7 @@ def test_model(testloader, training_config):
     ids = []
     with torch.no_grad():
         for inputs, study_id in tqdm(testloader):
-            y_pred, y_clssf = model(inputs.to(device))
+            y_pred, _ = model(inputs.to(device))
             
             # loss = mse(y_pred, labels.to(device))
             # _mae = mae(y_pred, labels.to(device))
@@ -167,6 +198,9 @@ def test_model(testloader, training_config):
             
             
             y_pred = y_pred.cpu()[:, 0]
+            # Unnormalize the age
+            if training_config['classification_head']:
+                y_pred = y_pred * (89 - 18) + 18
             # print(study_id.shape, y_pred.shape)
             
             # preds.append([study_id, y_pred])
@@ -188,8 +222,10 @@ def test_model(testloader, training_config):
     
     df = pd.DataFrame(preds_ids.T, columns=['StudyID', 'Age'])
     # df = df['StudyID', 'Age']
-    df['StudyID'] = df['StudyID'].astype(int)
+    df['StudyID'] = df['StudyID'].astype(int).astype(str)
+    df['StudyID'] = df['StudyID'].str.zfill(6)
     # df['StudyID'] = df['StudyID'].apply(lambda x: str(x).str.zfill(5))
+    
     df.to_csv(os.path.join(work_dir_path, 'submission_preds.csv'), index=False)
     df['Age'] = df['Age'].round()
     df.to_csv(os.path.join(work_dir_path, 'submission.csv'), index=False)

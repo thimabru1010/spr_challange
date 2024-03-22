@@ -1,4 +1,4 @@
-from torchvision.models import resnet50, resnet34
+from torchvision.models import resnet50, resnet34, resnet18
 import torch.nn as nn
 import torch
 from torchsummary import summary
@@ -15,6 +15,9 @@ class RegressionModel(nn.Module):
         elif model_name == 'resnet34':
             self.model = resnet34(weights=None)
             # self.model.load_state_dict(ResNet34_Weights)
+        elif model_name == 'resnet18':
+            self.model = resnet18(weights=None)
+            # self.model.load_state_dict(ResNet18_Weights)
 
         num_channels = 36  # for grayscale images, but it could be any number
         # Extract the first conv layer's parameters
