@@ -47,7 +47,7 @@ class BaseExperiment():
         
         self.optm = optm.Adam(self.model.parameters(), lr=training_config['lr'])
         
-        self.loss = WMAELoss(weight=1)
+        self.loss = WMSELoss(weight=1)
         self.mae = WMAELoss(weight=1)
         
         self.ce = nn.CrossEntropyLoss()
