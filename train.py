@@ -13,12 +13,12 @@ import argparse
 
 # Argparsers
 parser = argparse.ArgumentParser()
-parser.add_argument('--root_dir', type=str, default='/mnt/dados/dataset_jpr_train/dataset_36slices', help='Path to the dataset')
+parser.add_argument('--root_dir', type=str, default='/mnt/dados/dataset_jpr_train/segmented_dataset_4slices_single', help='Path to the dataset')
 parser.add_argument('--test_dir', type=str, default='/mnt/dados/dataset_jpr_test/segmented_dataset_36slices', help='Path to the test dataset')
-parser.add_argument('--batch_size', type=int, default=32, help='Batch Size')
-parser.add_argument('--num_workers', type=int, default=8, help='Number of Workers in Dataloader')
-parser.add_argument('--debug', action='store_false',help='Activate Debug Mode')
-parser.add_argument('--exp_name', type=str, default='custom_exp09', help='Experiment Name')
+parser.add_argument('--batch_size', type=int, default=64, help='Batch Size')
+parser.add_argument('--num_workers', type=int, default=4, help='Number of Workers in Dataloader')
+parser.add_argument('--debug', action='store_true',help='Activate Debug Mode')
+parser.add_argument('--exp_name', type=str, default='custom_exp17', help='Experiment Name')
 parser.add_argument('--deactivate_test', action='store_true', help='Deactivate Test')
 parser.add_argument('--deactivate_train', action='store_true', help='Deactivate Train')
 parser.add_argument('--aux_clssf', action='store_true', help='Activates auxiliary classification head for the model')
@@ -28,8 +28,8 @@ args = parser.parse_args()
 batch_size = args.batch_size
 num_workers = args.num_workers
 Debug = args.debug
-root_dir = Path(args.root_dir)
-test_dir = Path(args.test_dir)
+root_dir = args.root_dir
+test_dir = args.test_dir
 
 clssf_weights = None
 if args.clssf_weights:
@@ -46,19 +46,25 @@ transform = None
 training_config = {
     'batch_size': batch_size,
     'val_batch_size': batch_size,
-    'epoch': 100,
+    'epoch': 200,
     'lr': 1e-4,
     'ex_name': args.exp_name, 
-    'patience': 10,
+    'patience': 50,
     'delta': 0.0001,
-    'in_shape': (36, 512, 512),
+    'in_shape': (1, 512, 512),
     'classification_head': args.aux_clssf,
     'clssf_weights': clssf_weights,
 }
 
 if not args.deactivate_train:
     # data_files = read_files(root_dir, Debug)
+    
+    # groups = pd.read_csv('/mnt/dados/train_test_groups.csv', converters={'StudyID': str})
+    # list_groups = groups['Group'].tolist()
+    # filenames = groups['StudyID'].tolist()
+    
     filenames = os.listdir(root_dir)
+    # train_files, val_files = train_test_split(filenames, test_size=0.2, random_state=42, stratify = list_groups)
     train_files, val_files = train_test_split(filenames, test_size=0.2, random_state=42)
 
     train_set = HeadCTScan(root_dir, train_files, transform=transform, Debug=Debug, aux_clssf=args.aux_clssf)
