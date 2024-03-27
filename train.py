@@ -14,6 +14,7 @@ import argparse
 # Argparsers
 parser = argparse.ArgumentParser()
 parser.add_argument('--root_dir', type=str, default='/mnt/dados/dataset_jpr_train/segmented_dataset_4slices_single', help='Path to the dataset')
+parser.add_argument('--label_path', type=str, default='/mnt/dados/train_test_groups.csv', help='Path to label csv')
 parser.add_argument('--test_dir', type=str, default='/mnt/dados/dataset_jpr_test/segmented_dataset_36slices', help='Path to the test dataset')
 parser.add_argument('--batch_size', type=int, default=64, help='Batch Size')
 parser.add_argument('--num_workers', type=int, default=4, help='Number of Workers in Dataloader')
@@ -23,6 +24,8 @@ parser.add_argument('--deactivate_test', action='store_true', help='Deactivate T
 parser.add_argument('--deactivate_train', action='store_true', help='Deactivate Train')
 parser.add_argument('--aux_clssf', action='store_true', help='Activates auxiliary classification head for the model')
 parser.add_argument('--clssf_weights', action='store_true', help='Enable classification weights on classification loss')
+parser.add_argument('--input_channels', type=int, default=1, help='Channels of the input image')
+parser.add_argument('--backbone', type=str, default='resnet18', help='Backbone model for the experiment')
 args = parser.parse_args()
 
 batch_size = args.batch_size
@@ -51,9 +54,10 @@ training_config = {
     'ex_name': args.exp_name, 
     'patience': 50,
     'delta': 0.0001,
-    'in_shape': (1, 512, 512),
+    'in_shape': (args.input_channels, 512, 512),
     'classification_head': args.aux_clssf,
     'clssf_weights': clssf_weights,
+    'backbone': args.backbone
 }
 
 if not args.deactivate_train:
@@ -67,8 +71,8 @@ if not args.deactivate_train:
     # train_files, val_files = train_test_split(filenames, test_size=0.2, random_state=42, stratify = list_groups)
     train_files, val_files = train_test_split(filenames, test_size=0.2, random_state=42)
 
-    train_set = HeadCTScan(root_dir, train_files, transform=transform, Debug=Debug, aux_clssf=args.aux_clssf)
-    val_set = HeadCTScan(root_dir, val_files, transform=transform, Debug=Debug, aux_clssf=args.aux_clssf)
+    train_set = HeadCTScan(root_dir, args.label_path, train_files, transform=transform, Debug=Debug, aux_clssf=args.aux_clssf)
+    val_set = HeadCTScan(root_dir, args.label_path, val_files, transform=transform, Debug=Debug, aux_clssf=args.aux_clssf)
     print(len(train_set), len(val_set))
 
     dataloader_train = torch.utils.data.DataLoader(

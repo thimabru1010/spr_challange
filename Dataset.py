@@ -10,7 +10,7 @@ from tqdm import tqdm
 import nibabel as nib
 
 class HeadCTScan(Dataset):
-    def __init__(self, root_dir: Path, data_files: list, normalize: bool=True, transform: torchvision.transforms=None,
+    def __init__(self, root_dir: Path, label_path: Path, data_files: list, normalize: bool=True, transform: torchvision.transforms=None,
                 Debug: bool=False, aux_clssf: bool=False):
         super(HeadCTScan, self).__init__()
         
@@ -19,7 +19,7 @@ class HeadCTScan(Dataset):
         if Debug:
             self.data_files = self.data_files[:20]
         
-        self.labels = pd.read_csv('/mnt/dados/train_test_groups.csv',  converters={'StudyID': str})      
+        self.labels = pd.read_csv(label_path,  converters={'StudyID': str})      
         
         # self.labels = pd.read_csv('/mnt/dados/train_test.csv')
         self.labels['StudyID'] = self.labels['StudyID'].apply(lambda x: x.lstrip('0'))
@@ -50,9 +50,9 @@ class HeadCTScan(Dataset):
         
         labels = self.labels[file_name.split('/')[-1].split('_')[0].lstrip('0')]
         #labels = self.labels[file_name.split('.')[0].lstrip('0')]
-        if self.aux_clssf:
-            # Idade min = 18; Idade Max = 89
-            labels = (labels - 18) / (89 - 18)
+        # if self.aux_clssf:
+        #     # Idade min = 18; Idade Max = 89
+        #     labels = (labels - 18) / (89 - 18)
         
         # groups = self.groups[file_name.split('.')[0].lstrip('0')]        
         
@@ -71,10 +71,10 @@ class HeadCTScan(Dataset):
         else:
             data = torch.tensor(data, dtype=torch.float32)
             labels = torch.tensor(labels)
-            # groups = torch.tensor(groups)
+            groups = torch.tensor(groups)
         # print(data.shape, labels.shape)
         # print(data.dtype, labels.dtype)
-        return data, labels.unsqueeze(0), int(file_name.split('.')[0]) #, groups
+        return data, labels.unsqueeze(0), int(file_name.split('.')[0]), groups
 
 
 class HeadCTScan_TestSubmission(Dataset):

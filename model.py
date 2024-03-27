@@ -1,25 +1,29 @@
-from torchvision.models import resnet50, resnet34, resnet18
+from torchvision.models import resnet50, resnet34, resnet18, efficientnet_b3, efficientnet_b4, swin_v2_b
 import torch.nn as nn
 import torch
 from torchsummary import summary
 # from torchinfo import summary
 
 class RegressionModel(nn.Module):
-    def __init__(self, in_shape, model_name, aux_clssf=False, **kwargs):
+    def __init__(self, in_shape, model_name, aux_clssf=False, input_channels=1, **kwargs):
         super(RegressionModel, self).__init__()
         self.in_shape = in_shape
         if model_name == 'resnet50':
             self.model = resnet50(weights=None)
-            # self.model = resnet50(weights=weights)
-            # self.model.load_state_dict(ResNet50_Weights.DEFAULT)
         elif model_name == 'resnet34':
             self.model = resnet34(weights=None)
-            # self.model.load_state_dict(ResNet34_Weights)
         elif model_name == 'resnet18':
             self.model = resnet18(weights=None)
-            # self.model.load_state_dict(ResNet18_Weights)
+        elif model_name == 'efficientnet-b3':
+            self.model = efficientnet_b3(weights=None)
+        elif model_name == 'efficientnet-b4':
+            self.model = efficientnet_b4(weights=None)
+        elif model_name == 'swin':
+            self.model = swin_v2_b(weights=None)
 
-        num_channels = 1  # for grayscale images, but it could be any number
+        # summary(self.model, tuple(self.in_shape), device='cpu')
+        
+        num_channels = input_channels  # for grayscale images, but it could be any number
         # Extract the first conv layer's parameters
         num_filters = self.model.conv1.out_channels
         kernel_size = self.model.conv1.kernel_size
@@ -50,8 +54,8 @@ class RegressionModel(nn.Module):
         y = self.model(x)
         # print(y.shape)
         y_reg = self.fc(y)
-        # y_clssf = self.fc2(y)
-        return y_reg #, y_clssf
+        y_clssf = self.fc2(y)
+        return y_reg, y_clssf
  
 
 class RegressionModel2(nn.Module):

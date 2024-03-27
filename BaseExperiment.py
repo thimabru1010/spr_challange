@@ -38,7 +38,9 @@ class BaseExperiment():
         
         self.aux_clssf = training_config['classification_head']
         print('Input shape:', in_shape)
-        self.model = self._build_model(in_shape, 'resnet18', self.aux_clssf)
+        self.model = RegressionModel(in_shape=in_shape, model_name=training_config['backbone'],\
+            aux_clssf=self.aux_clssf, input_channels=training_config['in_shape'][0]).to(self.device)
+        # self.model = self._build_model(in_shape, 'resnet18', self.aux_clssf)
         
         print(summary(self.model, tuple(in_shape)))
         self.model= nn.DataParallel(self.model)
@@ -58,8 +60,8 @@ class BaseExperiment():
         self.trainloader = trainloader
         self.valloader = valloader
         
-    def _build_model(self, in_shape, model_name, aux_clssf=False):
-        return RegressionModel(in_shape=in_shape, model_name=model_name, aux_clssf=aux_clssf).to(self.device)
+    # def _build_model(self, in_shape, model_name, aux_clssf=False):
+    #     return RegressionModel(in_shape=in_shape, model_name=model_name, aux_clssf=aux_clssf).to(self.device)
         # return RegressionModel2(in_shape=in_shape).to(self.device)
     
     def _save_json(self, data, filename):
@@ -69,23 +71,23 @@ class BaseExperiment():
     def train_one_epoch(self):
         train_loss = 0
         
-        # sum_clssf_loss = 0
-        # sum_reg_loss = 0
+        sum_clssf_loss = 0
+        sum_reg_loss = 0
         self.model.train(True)
-        # for inputs, labels, _, group in tqdm(self.trainloader):
-        for inputs, labels, _ in tqdm(self.trainloader):
+        for inputs, labels, _, group in tqdm(self.trainloader):
+        # for inputs, labels, _ in tqdm(self.trainloader):
             # Zero your gradients for every batch!
             self.optm.zero_grad()
             
-            y_pred = self.model(inputs.to(self.device))
+            y_pred, y_clssf = self.model(inputs.to(self.device))
             
             loss = self.loss(y_pred, labels.to(self.device))
             
-            #clssf_loss = self.ce(y_clssf, group.to(self.device))
+            clssf_loss = self.ce(y_clssf, group.to(self.device))
             
             total_loss = loss
-            # if self.aux_clssf:
-                # total_loss = loss + clssf_loss
+            if self.aux_clssf:
+                total_loss = loss + clssf_loss
                 
             total_loss.backward()
             
@@ -93,30 +95,30 @@ class BaseExperiment():
             self.optm.step()
             
             train_loss += total_loss.detach()
-            # sum_clssf_loss += clssf_loss.detach()
-            # sum_reg_loss += loss.detach()
+            sum_clssf_loss += clssf_loss.detach()
+            sum_reg_loss += loss.detach()
             
         train_loss = train_loss / len(self.trainloader)
-        # sum_clssf_loss = sum_clssf_loss / len(self.trainloader)
-        # sum_reg_loss = sum_reg_loss / len(self.trainloader)
+        sum_clssf_loss = sum_clssf_loss / len(self.trainloader)
+        sum_reg_loss = sum_reg_loss / len(self.trainloader)
         
-        return train_loss #, sum_clssf_loss, sum_reg_loss
+        return train_loss, sum_clssf_loss, sum_reg_loss
 
     def validate_one_epoch(self):
         val_loss = 0
         val_mae = 0
-        # val_mse = 0
-        # val_ce = 0
+        val_mse = 0
+        val_ce = 0
         self.model.eval()
         # Disable gradient computation and reduce memory consumption.
         with torch.no_grad():
-            # for inputs, labels, _, group in tqdm(self.valloader):
-            for inputs, labels, _ in tqdm(self.valloader):
-                y_pred = self.model(inputs.to(self.device))
+            for inputs, labels, _, group in tqdm(self.valloader):
+            # for inputs, labels, _ in tqdm(self.valloader):
+                y_pred, y_clssf = self.model(inputs.to(self.device))
                 
                 loss = self.loss(y_pred, labels.to(self.device))
                 mae = self.mae(y_pred, labels.to(self.device))
-                # clssf_loss = self.ce(y_clssf, group.to(self.device))
+                clssf_loss = self.ce(y_clssf, group.to(self.device))
                 
                 total_loss = loss
                 if self.aux_clssf:
@@ -124,26 +126,26 @@ class BaseExperiment():
                 
                 val_loss += total_loss.detach()
                 val_mae += mae.detach()
-                # val_mse += loss.detach()
-                # val_ce += clssf_loss.detach()
+                val_mse += loss.detach()
+                val_ce += clssf_loss.detach()
             
         val_loss = val_loss / len(self.valloader)
         val_mae = val_mae / len(self.valloader)
-        # val_mse = val_mse / len(self.valloader)
-        # val_ce = val_ce / len(self.valloader)
+        val_mse = val_mse / len(self.valloader)
+        val_ce = val_ce / len(self.valloader)
         
-        return val_loss, val_mae #, val_mse, val_ce
+        return val_loss, val_mae, val_mse, val_ce
     
     def train(self):
         min_val_loss = float('inf')
         early_stop_counter = 0
         for epoch in range(self.epochs):
             
-            # train_loss, sum_clssf_loss, sum_reg_loss = self.train_one_epoch()
-            train_loss = self.train_one_epoch()
+            train_loss, sum_clssf_loss, sum_reg_loss = self.train_one_epoch()
+            # train_loss = self.train_one_epoch()
             
-            # val_loss, val_mae, val_mse, val_ce = self.validate_one_epoch()
-            val_loss, val_mae = self.validate_one_epoch()
+            val_loss, val_mae, val_mse, val_ce = self.validate_one_epoch()
+            # val_loss, val_mae = self.validate_one_epoch()
             
             
             if val_loss + self.delta < min_val_loss:
@@ -159,14 +161,13 @@ class BaseExperiment():
                 print(f"Epoch {epoch}: Train Loss = {train_loss:.6f} | Validation Loss = {val_loss:.6f} | Min Validation MAE = {min_val_loss:.6f}")
                 break
             
-            print(f"Epoch {epoch}: Train Loss = {train_loss:.6f} | Validation Loss = {val_loss:.6f} | Min Validation MAE = {min_val_loss:.6f}")
-            #print(f"Epoch {epoch}: Train Loss = {train_loss:.6f} | MSE Loss = {sum_reg_loss:.6f} | CE Loss = {sum_clssf_loss:.6f} | Validation Loss = {val_loss:.6f} | Validation MSE = {val_mse:.6f} | Validation MAE = {val_mae:.6f} | Validation CE = {val_ce:.6f}")
+            # print(f"Epoch {epoch}: Train Loss = {train_loss:.6f} | Validation Loss = {val_loss:.6f} | Min Validation MAE = {min_val_loss:.6f}")
+            print(f"Epoch {epoch}: Train Loss = {train_loss:.6f} | MSE Loss = {sum_reg_loss:.6f} | CE Loss = {sum_clssf_loss:.6f} | Validation Loss = {val_loss:.6f} | Validation MSE = {val_mse:.6f} | Validation MAE = {val_mae:.6f} | Validation CE = {val_ce:.6f}")
             
             
 # def _build_model(self, in_shape, model_name, aux_clssf=False):
-    # return RegressionModel(in_shape=in_shape, model_name=model_name, aux_clssf=aux_clssf).to(self.device)
-    # # return RegressionModel2(in_shape=in_shape).to(self.device)
-
+#     return RegressionModel(in_shape=in_shape, model_name=model_name, aux_clssf=aux_clssf).to(device)
+#     # return RegressionModel2(in_shape=in_shape).to(self.device)
     
 def test_model(testloader, training_config):
     work_dir_path = os.path.join('work_dirs', training_config['ex_name'])
@@ -175,7 +176,9 @@ def test_model(testloader, training_config):
     
     in_shape = training_config['in_shape']
         
-    model = _build_model(in_shape, 'resnet18', training_config['classification_head']).to(device)
+    model = RegressionModel(in_shape=in_shape, model_name='resnet18',\
+        aux_clssf=training_config['classification_head'], input_channels=training_config['in_shape'][0]).to(device)
+    # model = _build_model(in_shape, 'resnet18', training_config['classification_head']).to(device)
     
     model= nn.DataParallel(model)
     model.load_state_dict(torch.load(os.path.join(work_dir_path, 'checkpoint.pth')))
