@@ -54,7 +54,7 @@ class HeadCTScan(Dataset):
         #     # Idade min = 18; Idade Max = 89
         #     labels = (labels - 18) / (89 - 18)
         
-        groups = self.groups[file_name.split('.')[0].lstrip('0')]        
+        groups = self.groups[file_name.split('_')[0].lstrip('0')]        
         
         if self.normalize:
             # data = data - data.mean() / data.std()
