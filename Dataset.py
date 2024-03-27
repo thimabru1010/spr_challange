@@ -23,7 +23,7 @@ class HeadCTScan(Dataset):
         
         # self.labels = pd.read_csv('/mnt/dados/train_test.csv')
         self.labels['StudyID'] = self.labels['StudyID'].apply(lambda x: x.lstrip('0'))
-        # self.groups = self.labels.set_index('StudyID').to_dict()['Group']
+        self.groups = self.labels.set_index('StudyID').to_dict()['Group']
         self.labels = self.labels.set_index('StudyID').to_dict()['Age']
         # print(self.labels)
         # # print(self.labels.head(10))
