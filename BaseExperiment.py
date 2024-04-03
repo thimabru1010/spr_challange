@@ -47,7 +47,7 @@ class BaseExperiment():
         
         self.optm = optm.Adam(self.model.parameters(), lr=training_config['lr'])
         
-        self.loss = WMSELoss(weight=1)
+        self.loss = WMSELoss(weight=1)        
         self.mae = WMAELoss(weight=1)
         
         self.ce = nn.CrossEntropyLoss()
@@ -79,6 +79,7 @@ class BaseExperiment():
             # Zero your gradients for every batch!
             self.optm.zero_grad()
             
+            # print(inputs.shape)
             y_pred, y_clssf = self.model(inputs.to(self.device))
             
             loss = self.loss(y_pred, labels.to(self.device))
@@ -118,6 +119,7 @@ class BaseExperiment():
                 
                 loss = self.loss(y_pred, labels.to(self.device))
                 mae = self.mae(y_pred, labels.to(self.device))
+                # mae = self.mae(y_pred*(89 - 18) + 18, labels.to(self.device)*(89 - 18) + 18)                
                 clssf_loss = self.ce(y_clssf, group.to(self.device))
                 
                 total_loss = loss
@@ -135,6 +137,48 @@ class BaseExperiment():
         val_ce = val_ce / len(self.valloader)
         
         return val_loss, val_mae, val_mse, val_ce
+        
+        
+    def validate_one_epoch_vol(self):
+        val_loss = 0
+        val_mae = 0
+        val_mse = 0
+        val_ce = 0
+        self.model.eval()
+        # Disable gradient computation and reduce memory consumption.
+        with torch.no_grad():
+            for inputs, labels, _, group in tqdm(self.valloader):            
+                
+                print(inputs.shape, labels.shape)
+                inputs = inputs.permute(1, 0, 2, 3)
+                y_pred_s, y_clssf_s = self.model(inputs.to(self.device))
+                print(y_pred_s.shape, y_clssf_s.shape)
+                
+                y_pred = y_pred_s.mean()
+                
+                loss = self.loss(y_pred, labels.to(self.device))
+                mae = self.mae(y_pred, labels.to(self.device))
+                # mae = self.mae(y_pred*(89 - 18) + 18, labels.to(self.device)*(89 - 18) + 18)                 
+                
+                total_loss = loss
+                if self.aux_clssf:
+                    y_class = np.bincount(y_clssf_s).argmax()
+                    clssf_loss = self.ce(y_class, group.to(self.device))
+                    total_loss = loss + clssf_loss
+                
+                val_loss += total_loss.detach()
+                val_mae += mae.detach()
+                val_mse += loss.detach()
+                val_ce += clssf_loss.detach()
+            
+            
+        val_loss = val_loss / len(self.valloader)
+        val_mae = val_mae / len(self.valloader)
+        val_mse = val_mse / len(self.valloader)
+        val_ce = val_ce / len(self.valloader)
+        
+        return val_loss, val_mae, val_mse, val_ce    
+    
     
     def train(self):
         min_val_loss = float('inf')
@@ -142,11 +186,8 @@ class BaseExperiment():
         for epoch in range(self.epochs):
             
             train_loss, sum_clssf_loss, sum_reg_loss = self.train_one_epoch()
-            # train_loss = self.train_one_epoch()
             
-            val_loss, val_mae, val_mse, val_ce = self.validate_one_epoch()
-            # val_loss, val_mae = self.validate_one_epoch()
-            
+            val_loss, val_mae, val_mse, val_ce = self.validate_one_epoch_vol()
             
             if val_loss + self.delta < min_val_loss:
                 min_val_loss = val_loss
@@ -157,12 +198,14 @@ class BaseExperiment():
                 print(f"Val loss didn't improve! Early Stopping counter: {early_stop_counter}")                
             
             if early_stop_counter >= self.patience:
-                print(f'Early Stopping! Early Stopping counter: {early_stop_counter}')
-                print(f"Epoch {epoch}: Train Loss = {train_loss:.6f} | Validation Loss = {val_loss:.6f} | Min Validation MAE = {min_val_loss:.6f}")
+                print(f'Early Stopping! Early Stopping counter: {early_stop_counter}')              
                 break
             
-            # print(f"Epoch {epoch}: Train Loss = {train_loss:.6f} | Validation Loss = {val_loss:.6f} | Min Validation MAE = {min_val_loss:.6f}")
-            print(f"Epoch {epoch}: Train Loss = {train_loss:.6f} | MSE Loss = {sum_reg_loss:.6f} | CE Loss = {sum_clssf_loss:.6f} | Validation Loss = {val_loss:.6f} | Validation MSE = {val_mse:.6f} | Validation MAE = {val_mae:.6f} | Validation CE = {val_ce:.6f}")
+            if self.aux_clssf:
+                print(f"Epoch {epoch}: Train Loss = {train_loss:.6f} | MSE Loss = {sum_reg_loss:.6f} | CE Loss = {sum_clssf_loss:.6f} | Val Loss = {val_loss:.6f} | \
+                    Val MSE = {val_mse:.6f} | Val MAE = {val_mae:.6f} | Val CE = {val_ce:.6f}")
+            
+            print(f"Epoch {epoch}: Train Loss = {train_loss:.6f} | Val Loss = {val_loss:.6f} | Val MAE = {val_mae:.6f}")
             
             
 # def _build_model(self, in_shape, model_name, aux_clssf=False):

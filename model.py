@@ -1,4 +1,4 @@
-from torchvision.models import resnet50, resnet34, resnet18, efficientnet_b3, efficientnet_b4, swin_v2_b
+from torchvision.models import resnet50, resnet34, resnet18, efficientnet_b0, efficientnet_b1, efficientnet_b2, swin_v2_b, mobilenet_v2, densenet121
 import torch.nn as nn
 import torch
 from torchsummary import summary
@@ -14,16 +14,17 @@ class RegressionModel(nn.Module):
             self.model = resnet34(weights=None)
         elif model_name == 'resnet18':
             self.model = resnet18(weights=None)
-        elif model_name == 'efficientnet-b3':
-            self.model = efficientnet_b3(weights=None)
-        elif model_name == 'efficientnet-b4':
-            self.model = efficientnet_b4(weights=None)
+        elif model_name == 'densenet121':
+            self.model = densenet121(weights=None)
+        elif model_name == 'efficientnet_b0':
+            self.model = efficientnet_b0(weights=None)
         elif model_name == 'swin':
             self.model = swin_v2_b(weights=None)
 
         # summary(self.model, tuple(self.in_shape), device='cpu')
         
         num_channels = input_channels  # for grayscale images, but it could be any number
+        
         # Extract the first conv layer's parameters
         num_filters = self.model.conv1.out_channels
         kernel_size = self.model.conv1.kernel_size
@@ -37,6 +38,18 @@ class RegressionModel(nn.Module):
         conv1.weight.data = original_weights.repeat(1, num_channels, 1, 1)
         self.model.conv1 = conv1
         
+        #densenet
+        # self.model.features[0] = nn.Conv2d(num_channels, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+        #efficientnet-b4
+        # self.model.features[0] = nn.Conv2d(num_channels, 48, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        #efficientnet-b3
+        # self.model.features[0] = nn.Conv2d(num_channels, 40, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        #efficientnet-b2 -b0
+        # self.model.features[0] = nn.Conv2d(num_channels, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        
+        
+        
+        
         # self.model.fc = nn.Linear(512, 1)
         # Remove the last layer
         self.model.fc = nn.Identity()
@@ -45,7 +58,6 @@ class RegressionModel(nn.Module):
         self.fc2 = nn.Identity()
         if aux_clssf:
             self.fc2 = nn.Linear(512, 3)
-        
         
         # print(self.model)
         # summary(self.model, tuple(self.in_shape), device='cpu')
@@ -126,7 +138,7 @@ if __name__ == '__main__':
     model = RegressionModel(in_shape=(1, 512, 512), model_name='resnet18')
     # model = RegressionModel2(in_shape=(1, 512, 512))
     
-    x = torch.randn(1, 1, 512, 512).cpu()
+    x = torch.randn(1, 9, 512, 512).cpu()
     y = model(x)
     print(y.shape)
     print(y)
