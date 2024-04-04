@@ -49,7 +49,7 @@ if args.clssf_weights:
 print(root_dir)
 
 transform = None
-
+print(args.backbone)
 training_config = {
     'batch_size': batch_size,
     'val_batch_size': batch_size,

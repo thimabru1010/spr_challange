@@ -42,7 +42,10 @@ class BaseExperiment():
             aux_clssf=self.aux_clssf, input_channels=training_config['in_shape'][0]).to(self.device)
         # self.model = self._build_model(in_shape, 'resnet18', self.aux_clssf)
         
-        print(summary(self.model, tuple(in_shape)))
+        if training_config['backbone'] != 'swin':
+            print(summary(self.model, tuple(in_shape)))
+        else:
+            print(self.model)
         self.model= nn.DataParallel(self.model)
         
         self.optm = optm.Adam(self.model.parameters(), lr=training_config['lr'])
@@ -224,7 +227,7 @@ def test_model(testloader, training_config):
     
     in_shape = training_config['in_shape']
         
-    model = RegressionModel(in_shape=in_shape, model_name='resnet18',\
+    model = RegressionModel(in_shape=in_shape, model_name=training_config['backbone'],\
         aux_clssf=training_config['classification_head'], input_channels=training_config['in_shape'][0]).to(device)
     # model = _build_model(in_shape, 'resnet18', training_config['classification_head']).to(device)
     

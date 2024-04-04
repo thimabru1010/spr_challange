@@ -1,4 +1,4 @@
-from torchvision.models import resnet50, resnet34, resnet18, efficientnet_b0, efficientnet_b1, efficientnet_b2, swin_v2_b, mobilenet_v2, densenet121
+from torchvision.models import resnet50, resnet34, resnet18, efficientnet_b0, efficientnet_b1, efficientnet_b2, efficientnet_b3, efficientnet_b4, swin_v2_t, swin_v2_s, densenet121
 import torch.nn as nn
 import torch
 from torchsummary import summary
@@ -8,56 +8,67 @@ class RegressionModel(nn.Module):
     def __init__(self, in_shape, model_name, aux_clssf=False, input_channels=1, **kwargs):
         super(RegressionModel, self).__init__()
         self.in_shape = in_shape
-        if model_name == 'resnet50':
-            self.model = resnet50(weights=None)
-        elif model_name == 'resnet34':
-            self.model = resnet34(weights=None)
-        elif model_name == 'resnet18':
-            self.model = resnet18(weights=None)
+        print(f'Using model: {model_name}')
+        if 'resnet' in model_name:
+            if model_name == 'resnet50':
+                self.model = resnet50(weights=None)
+                output_size = 2048
+            elif model_name == 'resnet34':
+                self.model = resnet34(weights=None)
+                output_size = 512
+            elif model_name == 'resnet18':
+                self.model = resnet18(weights=None)
+                output_size = 512
+            self.model.conv1 = nn.Conv2d(input_channels, 64, kernel_size=(7, 7), stride=(2, 2),\
+                padding=(3, 3), bias=False)
+            self.model.fc = nn.Identity()
         elif model_name == 'densenet121':
             self.model = densenet121(weights=None)
+            self.model.features[0] = nn.Conv2d(input_channels, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+            self.model.classifier[0] = nn.Identity()
+            output_size = 1024
         elif model_name == 'efficientnet_b0':
             self.model = efficientnet_b0(weights=None)
-        elif model_name == 'swin':
-            self.model = swin_v2_b(weights=None)
-
-        # summary(self.model, tuple(self.in_shape), device='cpu')
+            self.model.features[0] = nn.Conv2d(input_channels, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+            self.model.classifier[1] = nn.Identity()
+            output_size = 1280
+        elif model_name == 'efficientnet_b1':
+            self.model = efficientnet_b1(weights=None)
+            self.model.features[0] = nn.Conv2d(input_channels, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+            self.model.classifier[1] = nn.Identity()
+            output_size = 1280
+        elif model_name == 'efficientnet_b2':
+            self.model = efficientnet_b2(weights=None)
+            self.model.features[0] = nn.Conv2d(input_channels, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+            self.model.classifier[1] = nn.Identity()
+            output_size = 1408
+        elif model_name == 'efficientnet_b3':
+            self.model = efficientnet_b3(weights=None)
+            self.model.features[0] = nn.Conv2d(input_channels, 40, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+            self.model.classifier[1] = nn.Identity()
+            output_size = 1536
+        elif model_name == 'efficientnet_b4':
+            self.model = efficientnet_b4(weights=None)
+            self.model.features[0] = nn.Conv2d(input_channels, 48, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+            self.model.classifier[1] = nn.Identity()
+            output_size = 1792
+        elif model_name == 'swin_s':
+            self.model = swin_v2_s(weights=None)
+            self.model.features[0][0] = nn.Conv2d(input_channels, 96, kernel_size=(4, 4), stride=(4, 4), padding=(1, 1), bias=False)
+            self.model.head = nn.Identity()
+            output_size = 768
+        elif model_name == 'swin_t':
+            self.model = swin_v2_t(weights=None)
+            self.model.features[0][0] = nn.Conv2d(input_channels, 96, kernel_size=(4, 4), stride=(4, 4), padding=(1, 1), bias=False)
+            self.model.head = nn.Identity()
+            output_size = 768
+        print(self.model)
         
-        num_channels = input_channels  # for grayscale images, but it could be any number
-        
-        # Extract the first conv layer's parameters
-        num_filters = self.model.conv1.out_channels
-        kernel_size = self.model.conv1.kernel_size
-        stride = self.model.conv1.stride
-        padding = self.model.conv1.padding
-        # initialize a new convolutional layer
-        conv1 = torch.nn.Conv2d(num_channels, num_filters, kernel_size=kernel_size, stride=stride, padding=padding)
-        # Initialize the new conv1 layer's weights by averaging the pretrained weights across the channel dimension
-        original_weights = self.model.conv1.weight.data.mean(dim=1, keepdim=True)
-        # Expand the averaged weights to the number of input channels of the new dataset
-        conv1.weight.data = original_weights.repeat(1, num_channels, 1, 1)
-        self.model.conv1 = conv1
-        
-        #densenet
-        # self.model.features[0] = nn.Conv2d(num_channels, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
-        #efficientnet-b4
-        # self.model.features[0] = nn.Conv2d(num_channels, 48, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
-        #efficientnet-b3
-        # self.model.features[0] = nn.Conv2d(num_channels, 40, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
-        #efficientnet-b2 -b0
-        # self.model.features[0] = nn.Conv2d(num_channels, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
-        
-        
-        
-        
-        # self.model.fc = nn.Linear(512, 1)
-        # Remove the last layer
-        self.model.fc = nn.Identity()
-        self.fc = nn.Linear(512, 1)
+        self.fc = nn.Linear(output_size, 1)
         
         self.fc2 = nn.Identity()
         if aux_clssf:
-            self.fc2 = nn.Linear(512, 3)
+            self.fc2 = nn.Linear(output_size, 3)
         
         # print(self.model)
         # summary(self.model, tuple(self.in_shape), device='cpu')
