@@ -104,8 +104,9 @@ if not args.deactivate_train:
         train_set, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=num_workers)
     # dataloader_val = torch.utils.data.DataLoader(
     #     val_set, batch_size=1, shuffle=True, pin_memory=True, num_workers=num_workers)
+    #TODO: pensar num jeito de fazer a validaçao com batch_size > 1
     dataloader_val = torch.utils.data.DataLoader(
-        val_set, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=num_workers)
+        val_set, batch_size=1, shuffle=True, pin_memory=True, num_workers=num_workers)
 
     exp = BaseExperiment(dataloader_train, dataloader_val, training_config)
 
