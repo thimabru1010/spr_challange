@@ -81,11 +81,11 @@ class HeadCTScan(Dataset):
             data = self.transform(data)
         else:
             data = torch.tensor(data, dtype=torch.float32)
-            labels = torch.tensor(labels)
+            labels = torch.tensor(labels, dtype=torch.float32)
             groups = torch.tensor(groups)
         # print(data.shape, labels.shape)
         # print(data.dtype, labels.dtype)
-        return data, labels.unsqueeze(0), int(file_name.split('.')[0]), groups
+        return data, labels, int(file_name.split('.')[0]), groups
 
 
 class HeadCTScan_Val(Dataset):
@@ -162,7 +162,7 @@ class HeadCTScan_Val(Dataset):
             groups = torch.tensor(groups)
         # print(data.shape, labels.shape)
         # print(data.dtype, labels.dtype)
-        return data, labels.unsqueeze(0), int(file_name.split('.')[0]), groups
+        return data, labels, int(file_name.split('.')[0]), groups
 
 
 
@@ -204,12 +204,14 @@ class HeadCTScan_TestSubmission(Dataset):
             # data = ((data - dcm_min) / (dcm_max - dcm_min))   # min-max normalization (0,1)
             # data = data - data.mean() / data.std()
             
+            # dcm_min, dcm_max = -15, 1024
+            # data[np.where(data<-15)] = -15
+            # # data[np.where(data>150)] = 150
+            # data = ((data - dcm_min) / (dcm_max - dcm_min))   # min-max normalization (0,1) 
+            
         if self.transform:
             data = self.transform(data)
         else:
             data = torch.tensor(data, dtype=torch.float32)
-            # labels = torch.tensor(labels)
-        # print(data.shape, labels.shape)
-        # print(data.dtype, labels.dtype)
-        # print(int(file_name.split('.')[0]))
+
         return data, int(file_name.split('.')[0])

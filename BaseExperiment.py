@@ -47,8 +47,11 @@ class BaseExperiment():
         
         self.optm = optm.Adam(self.model.parameters(), lr=training_config['lr'])
         
-        self.loss = WMSELoss(weight=1)        
-        self.mae = WMAELoss(weight=1)
+        # self.loss = WMSELoss(weight=1)        
+        # self.mae = WMAELoss(weight=1)
+        
+        self.loss = nn.MSELoss()        
+        self.mae = nn.L1Loss()
         
         self.ce = nn.CrossEntropyLoss()
         if training_config['clssf_weights'] is not None:
@@ -81,7 +84,7 @@ class BaseExperiment():
             
             # print(inputs.shape)
             y_pred, y_clssf = self.model(inputs.to(self.device))
-            
+
             loss = self.loss(y_pred, labels.to(self.device))
             
             clssf_loss = self.ce(y_clssf, group.to(self.device))
@@ -149,13 +152,15 @@ class BaseExperiment():
         with torch.no_grad():
             for inputs, labels, _, group in tqdm(self.valloader):            
                 
-                print(inputs.shape, labels.shape)
+                # print(inputs.shape, labels.shape)
                 inputs = inputs.permute(1, 0, 2, 3)
                 y_pred_s, y_clssf_s = self.model(inputs.to(self.device))
-                print(y_pred_s.shape, y_clssf_s.shape)
+                # print(y_pred_s.shape, y_clssf_s.shape)
                 
-                y_pred = y_pred_s.mean()
+                print(y_pred_s.shape, labels.shape)
+                y_pred = y_pred_s.mean(dim=0)
                 
+                print(y_pred.shape, labels.shape)
                 loss = self.loss(y_pred, labels.to(self.device))
                 mae = self.mae(y_pred, labels.to(self.device))
                 # mae = self.mae(y_pred*(89 - 18) + 18, labels.to(self.device)*(89 - 18) + 18)                 
@@ -165,11 +170,11 @@ class BaseExperiment():
                     y_class = np.bincount(y_clssf_s).argmax()
                     clssf_loss = self.ce(y_class, group.to(self.device))
                     total_loss = loss + clssf_loss
+                    val_ce += clssf_loss.detach()
                 
                 val_loss += total_loss.detach()
                 val_mae += mae.detach()
                 val_mse += loss.detach()
-                val_ce += clssf_loss.detach()
             
             
         val_loss = val_loss / len(self.valloader)
@@ -226,45 +231,31 @@ def test_model(testloader, training_config):
     model= nn.DataParallel(model)
     model.load_state_dict(torch.load(os.path.join(work_dir_path, 'checkpoint.pth')))
     model.eval()
-    # model= nn.DataParallel(model)
     
-    # mse = nn.MSELoss()
-    mse = WMSELoss(weight=1)
-    mae = WMAELoss(weight=1)
-    # mae = nn.L1Loss()
-    
-    test_loss = 0.0
-    test_mae = 0.0
-    # cm = np.zeros((2, 2), dtype=int)
     # Disable gradient computation and reduce memory consumption.
     preds = []
     ids = []
     with torch.no_grad():
         for inputs, study_id in tqdm(testloader):
-            y_pred, _ = model(inputs.to(device))
-            
-            # loss = mse(y_pred, labels.to(device))
-            # _mae = mae(y_pred, labels.to(device))
+            if training_config['in_shape'][0] == 1:
+                inputs = inputs.permute(1, 0, 2, 3)
                 
-            # test_loss += loss.detach()
-            # test_mae += _mae.detach()
+            y_pred_s, _ = model(inputs.to(device))
             
+            if training_config['in_shape'][0] == 1:
+                y_pred = y_pred_s.mean(dim=0)
             
-            y_pred = y_pred.cpu()[:, 0]
+            print(y_pred.shape)
+            y_pred = y_pred.cpu().numpy()
             # Unnormalize the age
-            if training_config['classification_head']:
-                y_pred = y_pred * (89 - 18) + 18
+            # if training_config['classification_head']:
+            #     y_pred = y_pred * (89 - 18) + 18
             # print(study_id.shape, y_pred.shape)
             
             # preds.append([study_id, y_pred])
             preds.append(y_pred)
             ids.append(study_id)
 
-        test_loss = test_loss / (len(testloader))
-        test_mae = test_mae / (len(testloader))
-    
-    # print("======== Metrics ========")
-    # print(f'MSE: {test_loss:.6f} | MAE: {test_mae:.6f}')
     
     preds = np.concatenate(preds, axis=0)
     study_ids = np.concatenate(ids, axis=0)

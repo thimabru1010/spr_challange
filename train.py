@@ -61,7 +61,8 @@ training_config = {
     'in_shape': (args.input_channels, 512, 512),
     'classification_head': args.aux_clssf,
     'clssf_weights': clssf_weights,
-    'backbone': args.backbone
+    'backbone': args.backbone,
+    'n_slices': args.n_slices
 }
 
 if not args.deactivate_train:
