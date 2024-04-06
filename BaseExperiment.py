@@ -66,9 +66,10 @@ class BaseExperiment():
         self.trainloader = trainloader
         self.valloader = valloader
         
-    # def _build_model(self, in_shape, model_name, aux_clssf=False):
-    #     return RegressionModel(in_shape=in_shape, model_name=model_name, aux_clssf=aux_clssf).to(self.device)
-        # return RegressionModel2(in_shape=in_shape).to(self.device)
+        # self.use_volume = False
+        # if (training_config['n_slices'] == training_config['in_shape'][0]):
+        #     self.use_volume = True
+        self.use_volume = training_config['n_slices'] != training_config['in_shape'][0]
     
     def _save_json(self, data, filename):
         with open(os.path.join(self.work_dir_path, filename), 'w') as f:
@@ -160,10 +161,10 @@ class BaseExperiment():
                 y_pred_s, y_clssf_s = self.model(inputs.to(self.device))
                 # print(y_pred_s.shape, y_clssf_s.shape)
                 
-                print(y_pred_s.shape, labels.shape)
+                # print(y_pred_s.shape, labels.shape)
                 y_pred = y_pred_s.mean(dim=0)
                 
-                print(y_pred.shape, labels.shape)
+                # print(y_pred.shape, labels.shape)
                 loss = self.loss(y_pred, labels.to(self.device))
                 mae = self.mae(y_pred, labels.to(self.device))
                 # mae = self.mae(y_pred*(89 - 18) + 18, labels.to(self.device)*(89 - 18) + 18)                 
@@ -195,7 +196,10 @@ class BaseExperiment():
             
             train_loss, sum_clssf_loss, sum_reg_loss = self.train_one_epoch()
             
-            val_loss, val_mae, val_mse, val_ce = self.validate_one_epoch_vol()
+            if self.use_volume:
+                val_loss, val_mae, val_mse, val_ce = self.validate_one_epoch_vol()
+            else:
+                val_loss, val_mae, val_mse, val_ce = self.validate_one_epoch()
             
             if val_loss + self.delta < min_val_loss:
                 min_val_loss = val_loss

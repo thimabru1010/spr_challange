@@ -11,7 +11,7 @@ import nibabel as nib
 
 class HeadCTScan(Dataset):
     def __init__(self, root_dir: Path, label_path: Path, data_files: list, normalize: bool=True, transform: torchvision.transforms=None,
-                Debug: bool=False, aux_clssf: bool=False):
+                Debug: bool=False, aux_clssf: bool=False, training_config=None):
         super(HeadCTScan, self).__init__()
         
         self.root_dir = root_dir
@@ -30,6 +30,8 @@ class HeadCTScan(Dataset):
         self.transform = transform
         
         self.aux_clssf = aux_clssf
+        
+        self.training_config = training_config
     
     def __len__(self):
         return len(self.data_files)
@@ -63,16 +65,12 @@ class HeadCTScan(Dataset):
         # groups = self.groups[file_name.split('_')[0].lstrip('0')]             
         
         if self.normalize:
-                        
             # dcm_min, dcm_max = -1024, 1024
             # data = 2*((data - dcm_min) / (dcm_max - dcm_min)) - 1    # min-max normalization (-1,1)
             # data = ((data - dcm_min) / (dcm_max - dcm_min))   # min-max normalization (0,1)  
             
-            # data = data - data.mean() / data.std()
-            
-            dcm_min, dcm_max = -15, 1024
-            data[np.where(data<-15)] = -15
-            # data[np.where(data>150)] = 150
+            dcm_min, dcm_max = self.training_config['norm_min'], self.training_config['norm_max']
+            data[np.where(data<self.training_config['norm_min'])] = self.training_config['norm_min']
             data = ((data - dcm_min) / (dcm_max - dcm_min))   # min-max normalization (0,1) 
             
         # data = np.expand_dims(data, axis=1)
@@ -90,7 +88,7 @@ class HeadCTScan(Dataset):
 
 class HeadCTScan_Val(Dataset):
     def __init__(self, root_dir: Path, label_path: Path, data_files: list, normalize: bool=True, transform: torchvision.transforms=None,
-                Debug: bool=False, aux_clssf: bool=False):
+                Debug: bool=False, aux_clssf: bool=False, training_config=None):
         super(HeadCTScan_Val, self).__init__()
         print('DEBUG')
         self.root_dir = root_dir

@@ -29,6 +29,8 @@ parser.add_argument('--clssf_weights', action='store_true', help='Enable classif
 parser.add_argument('--input_channels', type=int, default=1, help='Channels of the input image')
 parser.add_argument('--n_slices', type=int, default=9, help='Number of slices used to cut the CT scan')
 parser.add_argument('--backbone', type=str, default='resnet18', help='Backbone model for the experiment')
+parser.add_argument('--norm_min', type=int, default=-15, help='Normalization min bound')
+parser.add_argument('--norm_max', type=int, default=1024, help='Normalization max bound')
 args = parser.parse_args()
 
 batch_size = args.batch_size
@@ -62,18 +64,20 @@ training_config = {
     'classification_head': args.aux_clssf,
     'clssf_weights': clssf_weights,
     'backbone': args.backbone,
-    'n_slices': args.n_slices
+    'n_slices': args.n_slices,
+    'norm_min': args.norm_min,
+    'norm_max': args.norm_max
 }
 
 if not args.deactivate_train:
     # data_files = read_files(root_dir, Debug)
     
-    patients = ['000648', '002394', '002469']
+    # patients = ['000648', '002394', '002469']
     # estratificado
     df = pd.read_csv(args.label_path, converters={'StudyID': str})
     df['StudyID_pure'] = df['StudyID'].apply(lambda x: x.split('_')[0])
     # print(groups.head(10))
-    df = df[df['StudyID_pure'].isin(patients)]
+    # df = df[df['StudyID_pure'].isin(patients)]
     print(df.shape)
     # print(groups.head(10))
     # 1/0
@@ -83,21 +87,27 @@ if not args.deactivate_train:
     # list_groups = groups['Age'].tolist()
     filenames = df_tmp['StudyID_pure'].tolist()
     
-    print(df_tmp.shape)
-    _train_files = filenames[:2]
-    val_files = filenames[-1:]
-    print(_train_files, val_files)
-    # _train_files, val_files = train_test_split(filenames, test_size=0.2, random_state=42, stratify=list_groups)
+    # print(df_tmp.shape)
+    # _train_files = filenames[:2]
+    # val_files = filenames[-1:]
+    # print(_train_files, val_files)
+    _train_files, val_files = train_test_split(filenames, test_size=0.2, random_state=42, stratify=list_groups)
     
     print(f'Patients Count Train: {len(_train_files)} - Val: {len(val_files)}')
     
-    train_files = []
-    for filename in _train_files:
-        for i in range(args.n_slices):
-            train_files.append(filename + '_' + str(i))
+    if args.n_slices != args.input_channels:
+        train_files = []
+        for filename in _train_files:
+            for i in range(args.n_slices):
+                train_files.append(filename + '_' + str(i))
+    else:
+        train_files = _train_files
+    
             
-    train_set = HeadCTScan(root_dir, args.label_path, train_files, transform=transform, Debug=Debug, aux_clssf=args.aux_clssf)
-    val_set = HeadCTScan_Val(root_dir2, args.label_path, val_files, transform=transform, Debug=Debug, aux_clssf=args.aux_clssf)
+    train_set = HeadCTScan(root_dir, args.label_path, train_files, transform=transform, Debug=Debug,\
+        aux_clssf=args.aux_clssf, training_config=training_config)
+    val_set = HeadCTScan_Val(root_dir2, args.label_path, val_files, transform=transform, Debug=Debug,\
+        aux_clssf=args.aux_clssf, training_config=training_config)
     print(len(train_set), len(val_set))
 
     dataloader_train = torch.utils.data.DataLoader(
