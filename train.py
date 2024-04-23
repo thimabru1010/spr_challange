@@ -31,6 +31,8 @@ parser.add_argument('--n_slices', type=int, default=9, help='Number of slices us
 parser.add_argument('--backbone', type=str, default='resnet18', help='Backbone model for the experiment')
 parser.add_argument('--norm_min', type=int, default=-15, help='Normalization min bound')
 parser.add_argument('--norm_max', type=int, default=1024, help='Normalization max bound')
+parser.add_argument('-lr', '--learning_rate', type=float, default=1e-4, help='Learning rate')
+parser.add_argument('-optm', '--optmizer', type='str', default='adam', help='Optmizer')
 args = parser.parse_args()
 
 batch_size = args.batch_size
@@ -56,7 +58,7 @@ training_config = {
     'batch_size': batch_size,
     'val_batch_size': batch_size,
     'epoch': 150,
-    'lr': 1e-4,
+    'lr': args.learning_rate,
     'ex_name': args.exp_name, 
     'patience': 20,
     'delta': 0.0001,
@@ -66,7 +68,8 @@ training_config = {
     'backbone': args.backbone,
     'n_slices': args.n_slices,
     'norm_min': args.norm_min,
-    'norm_max': args.norm_max
+    'norm_max': args.norm_max,
+    'optimizer': args.optmizer
 }
 
 if not args.deactivate_train:

@@ -138,7 +138,6 @@ class HeadCTScan_Val(Dataset):
         # groups = self.groups[file_name.split('_')[0].lstrip('0')]             
         
         if self.normalize:
-                        
             # dcm_min, dcm_max = -1024, 1024
             # data = 2*((data - dcm_min) / (dcm_max - dcm_min)) - 1    # min-max normalization (-1,1)
             # data = ((data - dcm_min) / (dcm_max - dcm_min))   # min-max normalization (0,1)  

@@ -48,7 +48,10 @@ class BaseExperiment():
             print(self.model)
         self.model= nn.DataParallel(self.model)
         
-        self.optm = optm.Adam(self.model.parameters(), lr=training_config['lr'])
+        if training_config['optimizer'] == 'adam':
+            self.optm = optm.Adam(self.model.parameters(), lr=training_config['lr'])
+        elif training_config['optimizer'] == 'sgd':
+            self.optm = optm.SGD(self.model.parameters(), lr=training_config['lr'])
         
         # self.loss = WMSELoss(weight=1)        
         # self.mae = WMAELoss(weight=1)
@@ -58,7 +61,7 @@ class BaseExperiment():
         
         self.ce = nn.CrossEntropyLoss()
         if training_config['clssf_weights'] is not None:
-            self.ce = nn.CrossEntropyLoss(weights=torch.Tensor(training_config['clssf_weights']))
+            self.ce = nn.CrossEntropyLoss(weight=torch.Tensor(training_config['clssf_weights']))
 
         # self.loss = nn.MSELoss()
         # self.mae = nn.L1Loss()
@@ -150,6 +153,7 @@ class BaseExperiment():
         val_loss = 0
         val_mae = 0
         val_mse = 0
+        val_acc = 0
         val_ce = 0
         self.model.eval()
         # Disable gradient computation and reduce memory consumption.
@@ -171,22 +175,31 @@ class BaseExperiment():
                 
                 total_loss = loss
                 if self.aux_clssf:
-                    y_class = np.bincount(y_clssf_s).argmax()
+                    # y_class = np.bincount(y_clssf_s).argmax()
+                    y_class = y_clssf_s.mean(dim=0)
                     clssf_loss = self.ce(y_class, group.to(self.device))
                     total_loss = loss + clssf_loss
-                    val_ce += clssf_loss.detach()
+                    
+                    torch.softmax(y_clssf_s, dim=1)
+                    y_class = y_clssf_s.mean(dim=0).argmax()
+                    acc = (y_class == group).sum()
+                    val_acc += acc.detach()
+                    
+                    
                 
                 val_loss += total_loss.detach()
                 val_mae += mae.detach()
                 val_mse += loss.detach()
+                val_ce += clssf_loss.detach()
             
             
         val_loss = val_loss / len(self.valloader)
         val_mae = val_mae / len(self.valloader)
         val_mse = val_mse / len(self.valloader)
+        val_acc = val_acc / len(self.valloader)
         val_ce = val_ce / len(self.valloader)
         
-        return val_loss, val_mae, val_mse, val_ce    
+        return val_loss, val_mae, val_mse, val_acc    
     
     
     def train(self):
@@ -215,7 +228,7 @@ class BaseExperiment():
             
             if self.aux_clssf:
                 print(f"Epoch {epoch}: Train Loss = {train_loss:.6f} | MSE Loss = {sum_reg_loss:.6f} | CE Loss = {sum_clssf_loss:.6f} | Val Loss = {val_loss:.6f} | \
-                    Val MSE = {val_mse:.6f} | Val MAE = {val_mae:.6f} | Val CE = {val_ce:.6f}")
+                    Val MSE = {val_mse:.6f} | Val MAE = {val_mae:.6f} | Val ACC = {val_ce:.6f}")
             
             print(f"Epoch {epoch}: Train Loss = {train_loss:.6f} | Val Loss = {val_loss:.6f} | Val MAE = {val_mae:.6f}")
             
