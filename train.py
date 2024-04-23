@@ -32,7 +32,7 @@ parser.add_argument('--backbone', type=str, default='resnet18', help='Backbone m
 parser.add_argument('--norm_min', type=int, default=-15, help='Normalization min bound')
 parser.add_argument('--norm_max', type=int, default=1024, help='Normalization max bound')
 parser.add_argument('-lr', '--learning_rate', type=float, default=1e-4, help='Learning rate')
-parser.add_argument('-optm', '--optmizer', type='str', default='adam', help='Optmizer')
+parser.add_argument('-optm', '--optmizer', type=str, default='adam', help='Optmizer')
 args = parser.parse_args()
 
 batch_size = args.batch_size
