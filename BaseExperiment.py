@@ -51,7 +51,7 @@ class BaseExperiment():
         if training_config['optimizer'] == 'adam':
             self.optm = optm.Adam(self.model.parameters(), lr=training_config['lr'])
         elif training_config['optimizer'] == 'sgd':
-            self.optm = optm.SGD(self.model.parameters(), lr=training_config['lr'])
+            self.optm = optm.SGD(self.model.parameters(), lr=training_config['lr'], momentum=training_config['momentum'])
         
         # self.loss = WMSELoss(weight=1)        
         # self.mae = WMAELoss(weight=1)
