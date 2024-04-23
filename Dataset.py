@@ -83,7 +83,7 @@ class HeadCTScan(Dataset):
             groups = torch.tensor(groups)
         # print(data.shape, labels.shape)
         # print(data.dtype, labels.dtype)
-        return data, labels, int(file_name.split('.')[0]), groups
+        return data.to(torch.float32), labels.to(torch.float32), int(file_name.split('.')[0]), groups
 
 
 class HeadCTScan_Val(Dataset):
@@ -159,7 +159,7 @@ class HeadCTScan_Val(Dataset):
             groups = torch.tensor(groups)
         # print(data.shape, labels.shape)
         # print(data.dtype, labels.dtype)
-        return data, labels, int(file_name.split('.')[0]), groups
+        return data.to(torch.float32), labels.to(torch.float32), int(file_name.split('.')[0]), groups
 
 
 
