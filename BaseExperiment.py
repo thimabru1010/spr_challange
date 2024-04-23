@@ -11,7 +11,8 @@ import pandas as pd
 from tqdm import tqdm
 import numpy as np
 import torch.nn.functional as F
-from torchsummary import summary
+# from torchsummary import summary
+from torchinfo import summary
 
 from sklearn.metrics import f1_score as skf1_score
 from CustomLosses import WMSELoss, WMAELoss
@@ -44,7 +45,7 @@ class BaseExperiment():
         # self.model = self._build_model(in_shape, 'resnet18', self.aux_clssf)
         
         if training_config['backbone'] != 'swin':
-            print(summary(self.model, tuple(in_shape)))
+            print(summary(self.model, (training_config['batch_size'], in_shape[0], in_shape[1], in_shape[2])))
         else:
             print(self.model)
         self.model= nn.DataParallel(self.model)

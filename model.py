@@ -1,4 +1,5 @@
-from torchvision.models import resnet50, resnet34, resnet18, efficientnet_b0, efficientnet_b1, efficientnet_b2, efficientnet_b3, efficientnet_b4, swin_v2_t, swin_v2_s, densenet121
+from torchvision.models import resnet50, resnet34, resnet18, efficientnet_b0, efficientnet_b1, efficientnet_b2,\
+    efficientnet_b3, efficientnet_b4, swin_v2_t, swin_v2_s, densenet121, densenet161, densenet169, densenet201
 import torch.nn as nn
 import torch
 from torchsummary import summary
@@ -25,8 +26,24 @@ class RegressionModel(nn.Module):
         elif model_name == 'densenet121':
             self.model = densenet121(weights=None)
             self.model.features[0] = nn.Conv2d(input_channels, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
-            self.model.classifier[0] = nn.Identity()
+            self.model.classifier = nn.Identity()
             output_size = 1024
+            #TODO: Augment DenseNet
+        elif model_name == 'densenet161':
+            self.model = densenet161(weights=None)
+            self.model.features[0] = nn.Conv2d(input_channels, 96, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+            self.model.classifier = nn.Identity()
+            output_size = 2208
+        elif model_name == 'densenet169':
+            self.model = densenet169(weights=None)
+            self.model.features[0] = nn.Conv2d(input_channels, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+            self.model.classifier = nn.Identity()
+            output_size = 1664
+        elif model_name == 'densenet201':
+            self.model = densenet201(weights=None)
+            self.model.features[0] = nn.Conv2d(input_channels, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+            self.model.classifier = nn.Identity()
+            output_size = 1920
         elif model_name == 'efficientnet_b0':
             self.model = efficientnet_b0(weights=None)
             self.model.features[0] = nn.Conv2d(input_channels, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
@@ -62,7 +79,7 @@ class RegressionModel(nn.Module):
             self.model.features[0][0] = nn.Conv2d(input_channels, 96, kernel_size=(4, 4), stride=(4, 4), padding=(1, 1), bias=False)
             self.model.head = nn.Identity()
             output_size = 768
-        print(self.model)
+        # print(self.model)
         
         self.fc = nn.Linear(output_size, 1)
         
