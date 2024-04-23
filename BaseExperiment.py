@@ -92,10 +92,10 @@ class BaseExperiment():
             # print(inputs.shape)
             y_pred, y_clssf = self.model(inputs.to(self.device))
 
-            print(y_pred)
-            print(y_pred.shape)
-            print(labels)
-            loss = self.loss(y_pred[:, 0].to(torch.float32), labels.to(torch.float32).to(self.device))
+            # print(y_pred)
+            # print(y_pred.shape)
+            # print(labels)
+            loss = self.loss(y_pred[:, 0], labels.to(torch.float32))
             
             clssf_loss = self.ce(y_clssf, group.to(self.device))
             
