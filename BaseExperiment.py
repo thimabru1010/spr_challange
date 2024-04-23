@@ -95,7 +95,7 @@ class BaseExperiment():
             print(y_pred)
             print(y_pred.shape)
             print(labels)
-            loss = self.loss(y_pred[:, 0].to(torch.cuda.FloatTensor), labels.to(self.device).to(torch.cuda.FloatTensor))
+            loss = self.loss(y_pred[:, 0].to(torch.float32), labels.to(torch.float32).to(self.device))
             
             clssf_loss = self.ce(y_clssf, group.to(self.device))
             
