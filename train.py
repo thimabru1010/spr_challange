@@ -34,6 +34,8 @@ parser.add_argument('--norm_max', type=int, default=1024, help='Normalization ma
 parser.add_argument('-lr', '--learning_rate', type=float, default=1e-4, help='Learning rate')
 parser.add_argument('-optm', '--optmizer', type=str, default='adam', help='Optmizer')
 parser.add_argument('--momentum', type=float, default=0.9, help='SGD momentum')
+parser.add_argument('--sched_step', type=int, default=1, help='SGD momentum')
+parser.add_argument('--sched_decay_factor', type=float, default=0.9, help='SGD momentum')
 args = parser.parse_args()
 
 batch_size = args.batch_size
@@ -71,7 +73,9 @@ training_config = {
     'norm_min': args.norm_min,
     'norm_max': args.norm_max,
     'optimizer': args.optmizer,
-    'momentum': args.momentum
+    'momentum': args.momentum,
+    'sched_step': args.sched_step,
+    'sched_decay_factor': args.sched_decay_factor
 }
 
 if not args.deactivate_train:

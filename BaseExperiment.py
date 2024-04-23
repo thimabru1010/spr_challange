@@ -4,6 +4,7 @@ from model import RegressionModel , RegressionModel2
 # from segmentation_models_pytorch.losses import FocalLoss
 import torch.nn as nn
 import torch.optim as optm
+from torch.optim.lr_scheduler import StepLR
 import os
 import json
 import pandas as pd
@@ -53,8 +54,8 @@ class BaseExperiment():
         elif training_config['optimizer'] == 'sgd':
             self.optm = optm.SGD(self.model.parameters(), lr=training_config['lr'], momentum=training_config['momentum'])
         
-        # self.loss = WMSELoss(weight=1)        
-        # self.mae = WMAELoss(weight=1)
+        self.scheduler = StepLR(self.optm, step_size=training_config['sched_step_size'],\
+            gamma=training_config['sched_decay_factor'])
         
         self.loss = nn.MSELoss()        
         self.mae = nn.L1Loss()
@@ -218,6 +219,9 @@ class BaseExperiment():
             else:
                 val_loss, val_mae, val_mse, val_ce = self.validate_one_epoch()
             
+            last_lr = self.scheduler.get_last_lr()[0]
+            self.scheduler.step()
+            
             if val_loss + self.delta < min_val_loss:
                 min_val_loss = val_loss
                 early_stop_counter = 0
@@ -234,7 +238,7 @@ class BaseExperiment():
                 print(f"Epoch {epoch}: Train Loss = {train_loss:.6f} | MSE Loss = {sum_reg_loss:.6f} | CE Loss = {sum_clssf_loss:.6f} | Val Loss = {val_loss:.6f} | \
                     Val MSE = {val_mse:.6f} | Val MAE = {val_mae:.6f} | Val ACC = {val_ce:.6f}")
             
-            print(f"Epoch {epoch}: Train Loss = {train_loss:.6f} | Val Loss = {val_loss:.6f} | Val MAE = {val_mae:.6f}")
+            print(f"Epoch {epoch}: LR={last_lr:.8f} | Train Loss = {train_loss:.6f} | Val Loss = {val_loss:.6f} | Val MAE = {val_mae:.6f}")
             
             
 # def _build_model(self, in_shape, model_name, aux_clssf=False):
