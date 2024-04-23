@@ -96,7 +96,7 @@ class BaseExperiment():
             # print(y_pred)
             # print(y_pred.shape)
             # print(labels)
-            loss = self.loss(y_pred[:, 0], labels.to(self.device))
+            loss = self.loss(y_pred, labels.to(self.device))
             
             clssf_loss = self.ce(y_clssf, group.to(self.device))
             
@@ -131,8 +131,8 @@ class BaseExperiment():
             # for inputs, labels, _ in tqdm(self.valloader):
                 y_pred, y_clssf = self.model(inputs.to(self.device))
                 
-                loss = self.loss(y_pred[:, 0], labels.to(self.device))
-                mae = self.mae(y_pred[:, 0], labels.to(self.device))
+                loss = self.loss(y_pred, labels.to(self.device))
+                mae = self.mae(y_pred, labels.to(self.device))
                 # mae = self.mae(y_pred*(89 - 18) + 18, labels.to(self.device)*(89 - 18) + 18)                
                 clssf_loss = self.ce(y_clssf, group.to(self.device))
                 
@@ -173,8 +173,8 @@ class BaseExperiment():
                 y_pred = y_pred_s.mean(dim=0)
                 
                 # print(y_pred.shape, labels.shape)
-                loss = self.loss(y_pred[:, 0], labels.to(self.device))
-                mae = self.mae(y_pred[:, 0], labels.to(self.device))
+                loss = self.loss(y_pred, labels.to(self.device))
+                mae = self.mae(y_pred, labels.to(self.device))
                 # mae = self.mae(y_pred*(89 - 18) + 18, labels.to(self.device)*(89 - 18) + 18)                 
                 
                 total_loss = loss
