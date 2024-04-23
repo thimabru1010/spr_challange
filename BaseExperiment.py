@@ -178,6 +178,7 @@ class BaseExperiment():
                     # y_class = np.bincount(y_clssf_s).argmax()
                     y_class = y_clssf_s.mean(dim=0)
                     clssf_loss = self.ce(y_class, group.to(self.device))
+                    val_ce += clssf_loss.detach()
                     total_loss = loss + clssf_loss
                     
                     torch.softmax(y_clssf_s, dim=1)
@@ -190,7 +191,7 @@ class BaseExperiment():
                 val_loss += total_loss.detach()
                 val_mae += mae.detach()
                 val_mse += loss.detach()
-                val_ce += clssf_loss.detach()
+                # val_ce += clssf_loss.detach()
             
             
         val_loss = val_loss / len(self.valloader)
