@@ -92,7 +92,7 @@ class BaseExperiment():
             # print(inputs.shape)
             y_pred, y_clssf = self.model(inputs.to(self.device))
 
-            loss = self.loss(y_pred, labels.to(self.device))
+            loss = self.loss(y_pred[:, 0], labels.to(self.device))
             
             clssf_loss = self.ce(y_clssf, group.to(self.device))
             
