@@ -70,7 +70,8 @@ training_config = {
     'n_slices': args.n_slices,
     'norm_min': args.norm_min,
     'norm_max': args.norm_max,
-    'optimizer': args.optmizer
+    'optimizer': args.optmizer,
+    'momentum': args.momentum
 }
 
 if not args.deactivate_train:
