@@ -187,8 +187,8 @@ class HeadCTScan_TestSubmission(Dataset):
     def __getitem__(self, index):
         file_name = self.data_files[index]
         
-        data = nib.load(self.root_dir + '/' + file_name).get_fdata()
-        data = data.reshape((data.shape[0], data.shape[1], 1))
+        data = nib.load(self.root_dir + '/' + file_name).get_fdata() # Load a n channel image
+        # data = data.reshape((data.shape[0], data.shape[1], 1))
         # print(data.shape)
         data = data.transpose(2, 0, 1)
         data = data[:, :512, :512]

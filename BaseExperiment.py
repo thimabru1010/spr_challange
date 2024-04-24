@@ -271,9 +271,9 @@ def test_model(testloader, training_config):
             
             # print(inputs.shape)
             y_pred_s, _ = model(inputs.to(device))
-            
+            y_pred = y_pred_s
             if training_config['in_shape'][0] == 1:
-                y_pred = y_pred_s.mean(dim=1)
+                y_pred = y_pred_s.mean(dim=0)
             
             # print(y_pred.shape)
             y_pred = y_pred.cpu().numpy()

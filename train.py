@@ -137,6 +137,6 @@ if not args.deactivate_test:
     test_set = HeadCTScan_TestSubmission(root_dir=test_dir, data_files=test_files, Debug=Debug)
 
     dataloader_test = torch.utils.data.DataLoader(
-        test_set, batch_size=batch_size, shuffle=False, pin_memory=True)
+        test_set, batch_size=1, shuffle=False, pin_memory=True)
 
     test_model(dataloader_test, training_config)
