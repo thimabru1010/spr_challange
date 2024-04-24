@@ -197,15 +197,15 @@ class HeadCTScan_TestSubmission(Dataset):
         
         if self.normalize:
                        
-            dcm_min, dcm_max = -1024, 1024
-            data = 2*((data - dcm_min) / (dcm_max - dcm_min)) - 1    # min-max normalization (-1,1)
+            # dcm_min, dcm_max = -1024, 1024
+            # data = 2*((data - dcm_min) / (dcm_max - dcm_min)) - 1    # min-max normalization (-1,1)
             # data = ((data - dcm_min) / (dcm_max - dcm_min))   # min-max normalization (0,1)
             # data = data - data.mean() / data.std()
             
-            # dcm_min, dcm_max = -15, 1024
-            # data[np.where(data<-15)] = -15
-            # # data[np.where(data>150)] = 150
-            # data = ((data - dcm_min) / (dcm_max - dcm_min))   # min-max normalization (0,1) 
+            dcm_min, dcm_max = -15, 1024
+            data[np.where(data<-15)] = -15
+            # data[np.where(data>150)] = 150
+            data = ((data - dcm_min) / (dcm_max - dcm_min))   # min-max normalization (0,1) 
             
         if self.transform:
             data = self.transform(data)

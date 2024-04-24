@@ -269,14 +269,14 @@ def test_model(testloader, training_config):
             if training_config['in_shape'][0] == 1:
                 inputs = inputs.permute(1, 0, 2, 3)
             
-            print('debug')
-            print(inputs.shape)
+            # print('debug')
+            # print(inputs.shape)
             y_pred_s, _ = model(inputs.to(device))
             y_pred = y_pred_s
             if training_config['in_shape'][0] == 1:
                 y_pred = y_pred_s.mean(dim=0)
             
-            print(y_pred.shape)
+            # print(y_pred.shape)
             y_pred = y_pred.cpu().numpy()
             # Unnormalize the age
             # if training_config['classification_head']:
