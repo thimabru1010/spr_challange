@@ -189,6 +189,7 @@ class HeadCTScan_TestSubmission(Dataset):
         
         data = nib.load(self.root_dir + '/' + file_name).get_fdata()
         # data.reshape((data.shape[0], data.shape[1], 1))
+        print(data.shape)
         data = data.transpose(2, 0, 1)
         data = data[:, :512, :512]
 
