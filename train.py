@@ -63,7 +63,7 @@ training_config = {
     'epoch': 150,
     'lr': args.learning_rate,
     'ex_name': args.exp_name, 
-    'patience': 20,
+    'patience': 10,
     'delta': 0.0001,
     'in_shape': (args.input_channels, 512, 512),
     'classification_head': args.aux_clssf,
