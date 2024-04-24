@@ -1,5 +1,6 @@
 from torchvision.models import resnet50, resnet34, resnet18, efficientnet_b0, efficientnet_b1, efficientnet_b2,\
-    efficientnet_b3, efficientnet_b4, swin_v2_t, swin_v2_s, densenet121, densenet161, densenet169, densenet201
+    efficientnet_b3, efficientnet_b4, efficientnet_b5, efficientnet_b6, efficientnet_b7, swin_v2_t, swin_v2_s, densenet121, densenet161, densenet169,\
+        densenet201, efficientnet_v2_s, efficientnet_v2_m, efficientnet_v2_l
 import torch.nn as nn
 import torch
 from torchsummary import summary
@@ -28,7 +29,6 @@ class RegressionModel(nn.Module):
             self.model.features[0] = nn.Conv2d(input_channels, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
             self.model.classifier = nn.Identity()
             output_size = 1024
-            #TODO: Augment DenseNet
         elif model_name == 'densenet161':
             self.model = densenet161(weights=None)
             self.model.features[0] = nn.Conv2d(input_channels, 96, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
@@ -69,6 +69,37 @@ class RegressionModel(nn.Module):
             self.model.features[0] = nn.Conv2d(input_channels, 48, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
             self.model.classifier[1] = nn.Identity()
             output_size = 1792
+        # TODO: Implement efficientnet_b5
+        elif model_name == 'efficientnet_b5':
+            self.model = efficientnet_b5(weights=None)
+            self.model.features[0] = nn.Conv2d(input_channels, 48, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+            self.model.classifier[1] = nn.Identity()
+            output_size = 2048
+        elif model_name == 'efficientnet_b6':
+            self.model = efficientnet_b6(weights=None)
+            self.model.features[0] = nn.Conv2d(input_channels, 56, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+            self.model.classifier[1] = nn.Identity()
+            output_size = 2304
+        elif model_name == 'efficientnet_b7':
+            self.model = efficientnet_b7(weights=None)
+            self.model.features[0] = nn.Conv2d(input_channels, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+            self.model.classifier[1] = nn.Identity()
+            output_size = 2560
+        elif model_name == 'efficientnet_v2_s':
+            self.model = efficientnet_v2_s(weights=None)
+            self.model.features[0] = nn.Conv2d(input_channels, 24, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+            self.model.classifier[1] = nn.Identity()
+            output_size = 1280
+        elif model_name == 'efficientnet_v2_m':
+            self.model = efficientnet_v2_m(weights=None)
+            self.model.features[0] = nn.Conv2d(input_channels, 24, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+            self.model.classifier[1] = nn.Identity()
+            output_size = 1280
+        elif model_name == 'efficientnet_v2_l':
+            self.model = efficientnet_v2_l(weights=None)
+            self.model.features[0] = nn.Conv2d(input_channels, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+            self.model.classifier[1] = nn.Identity()
+            output_size = 1280
         elif model_name == 'swin_s':
             self.model = swin_v2_s(weights=None)
             self.model.features[0][0] = nn.Conv2d(input_channels, 96, kernel_size=(4, 4), stride=(4, 4), padding=(1, 1), bias=False)
