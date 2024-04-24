@@ -266,16 +266,16 @@ def test_model(testloader, training_config):
     ids = []
     with torch.no_grad():
         for inputs, study_id in tqdm(testloader):
-            if training_config['in_shape'][0] == 1:
-                inputs = inputs.permute(1, 0, 2, 3)
+            # if training_config['in_shape'][0] == 1:
+            #     inputs = inputs.permute(1, 0, 2, 3)
             
             print(inputs.shape)
             y_pred_s, _ = model(inputs.to(device))
             
             if training_config['in_shape'][0] == 1:
-                y_pred = y_pred_s.mean(dim=0)
+                y_pred = y_pred_s.mean(dim=1)
             
-            print(y_pred.shape)
+            # print(y_pred.shape)
             y_pred = y_pred.cpu().numpy()
             # Unnormalize the age
             # if training_config['classification_head']:
