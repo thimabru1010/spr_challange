@@ -63,7 +63,7 @@ if args.use_data_aug:
         [
             transforms.Resize(256),
             transforms.RandomApply([transforms.RandomRotatation(degrees=90)], p=prob),
-            transforms.RandomApply([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()], p=prob)
+            transforms.RandomApply([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()], p=prob),
             transforms.ToTensor()
         ])
 
