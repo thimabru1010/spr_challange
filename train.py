@@ -72,9 +72,11 @@ if args.use_data_aug:
             transforms.Resize(256),
             transforms.ToTensor()
         ])
+    img_size = 256
 else:
     transform = None
     val_transform = None
+    img_size = 512
 
 
 print(args.backbone)
@@ -86,7 +88,7 @@ training_config = {
     'ex_name': args.exp_name, 
     'patience': 10,
     'delta': 0.0001,
-    'in_shape': (args.input_channels, 512, 512),
+    'in_shape': (args.input_channels, img_size, img_size),
     'classification_head': args.aux_clssf,
     'clssf_weights': clssf_weights,
     'backbone': args.backbone,
