@@ -62,9 +62,9 @@ if args.use_data_aug:
     transform = transforms.Compose(
         [
             transforms.ToTensor(),
-            transforms.Resize(256),
-            transforms.RandomApply([transforms.RandomRotation(degrees=90)], p=prob),
-            transforms.RandomApply([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()], p=prob)
+            transforms.Resize(256)
+            # transforms.RandomApply([transforms.RandomRotation(degrees=90)], p=prob),
+            # transforms.RandomApply([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()], p=prob)
         ])
 
     val_transform = transforms.Compose(
