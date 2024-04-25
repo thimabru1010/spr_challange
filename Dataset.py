@@ -127,12 +127,6 @@ class HeadCTScan_Val(Dataset):
         data = data[:, :512, :512]
         
         labels = self.labels[file_name.lstrip('0')]
-        # labels = (labels - 18) / (89 - 18)
-        # labels = self.labels[file_name.split('/')[-1].split('_')[0].lstrip('0')]
-        #labels = self.labels[file_name.split('.')[0].lstrip('0')]
-        # if self.aux_clssf:
-        #     # Idade min = 18; Idade Max = 89
-        #     labels = (labels - 18) / (89 - 18)
         
         groups = self.groups[file_name.lstrip('0')]   
         # groups = self.groups[file_name.split('_')[0].lstrip('0')]             

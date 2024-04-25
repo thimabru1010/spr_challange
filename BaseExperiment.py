@@ -93,7 +93,8 @@ class BaseExperiment():
             # Zero your gradients for every batch!
             self.optm.zero_grad()
             
-            # print(inputs.shape)
+            inputs = inputs.unsqueeze(1)
+            print(inputs.shape)
             y_pred, y_clssf = self.model(inputs.to(self.device))
 
             # print(y_pred)
@@ -132,6 +133,9 @@ class BaseExperiment():
         with torch.no_grad():
             for inputs, labels, _, group in tqdm(self.valloader):
             # for inputs, labels, _ in tqdm(self.valloader):
+            
+                inputs = inputs.unsqueeze(1)
+                print(inputs.shape)
                 y_pred, y_clssf = self.model(inputs.to(self.device))
                 
                 loss = self.loss(y_pred, labels.to(self.device))
