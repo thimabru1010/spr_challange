@@ -77,6 +77,8 @@ class HeadCTScan(Dataset):
             
         if self.transform:
             data = self.transform(data)
+            labels = torch.tensor(labels)
+            groups = torch.tensor(groups)
         else:
             data = torch.tensor(data, dtype=torch.float32)
             labels = torch.tensor(labels, dtype=torch.float32)
@@ -147,6 +149,8 @@ class HeadCTScan_Val(Dataset):
             
         if self.transform:
             data = self.transform(data)
+            labels = torch.tensor(labels)
+            groups = torch.tensor(groups)
         else:
             data = torch.tensor(data, dtype=torch.float32)
             labels = torch.tensor(labels)
