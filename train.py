@@ -61,16 +61,16 @@ if args.use_data_aug:
     prob = 0.5
     transform = transforms.Compose(
         [
+            transforms.ToTensor(),
             transforms.Resize(256),
             transforms.RandomApply([transforms.RandomRotation(degrees=90)], p=prob),
-            transforms.RandomApply([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()], p=prob),
-            transforms.ToTensor()
+            transforms.RandomApply([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()], p=prob)
         ])
 
     val_transform = transforms.Compose(
         [
-            transforms.Resize(256),
-            transforms.ToTensor()
+            transforms.ToTensor(),
+            transforms.Resize(256)
         ])
     img_size = 256
 else:
