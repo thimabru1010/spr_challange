@@ -85,11 +85,9 @@ if not args.deactivate_train:
     # estratificado
     df = pd.read_csv(args.label_path, converters={'StudyID': str})
     df['StudyID_pure'] = df['StudyID'].apply(lambda x: x.split('_')[0])
-    # print(groups.head(10))
-    # df = df[df['StudyID_pure'].isin(patients)]
+
     print(df.shape)
-    # print(groups.head(10))
-    # 1/0
+
     df_tmp = df[['Group', 'StudyID_pure']]
     df_tmp = df_tmp.drop_duplicates()
     list_groups = df_tmp['Group'].tolist()
@@ -121,11 +119,13 @@ if not args.deactivate_train:
 
     dataloader_train = torch.utils.data.DataLoader(
         train_set, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=num_workers)
-    # dataloader_val = torch.utils.data.DataLoader(
-    #     val_set, batch_size=1, shuffle=True, pin_memory=True, num_workers=num_workers)
-    #TODO: pensar num jeito de fazer a validaçao com batch_size > 1
+
+    if training_config['n_slices'] != training_config['in_shape'][0]:
+        batch_size_val = 1
+    else:
+        batch_size_val = batch_size
     dataloader_val = torch.utils.data.DataLoader(
-        val_set, batch_size=1, shuffle=True, pin_memory=True, num_workers=num_workers)
+        val_set, batch_size=batch_size_val, shuffle=True, pin_memory=True, num_workers=num_workers)
 
     exp = BaseExperiment(dataloader_train, dataloader_val, training_config)
 
@@ -137,6 +137,6 @@ if not args.deactivate_test:
     test_set = HeadCTScan_TestSubmission(root_dir=test_dir, data_files=test_files, Debug=Debug)
 
     dataloader_test = torch.utils.data.DataLoader(
-        test_set, batch_size=1, shuffle=False, pin_memory=True)
+        test_set, batch_size=batch_size_val, shuffle=False, pin_memory=True)
 
     test_model(dataloader_test, training_config)
