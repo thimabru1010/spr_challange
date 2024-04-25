@@ -1,6 +1,7 @@
 from torchvision.models import resnet50, resnet34, resnet18, efficientnet_b0, efficientnet_b1, efficientnet_b2,\
     efficientnet_b3, efficientnet_b4, efficientnet_b5, efficientnet_b6, efficientnet_b7, swin_v2_t, swin_v2_s, densenet121, densenet161, densenet169,\
         densenet201, efficientnet_v2_s, efficientnet_v2_m, efficientnet_v2_l
+from TimeSformer.timesformer.models.vit import TimeSformer
 import torch.nn as nn
 import torch
 from torchsummary import summary
@@ -109,6 +110,11 @@ class RegressionModel(nn.Module):
             self.model = swin_v2_t(weights=None)
             self.model.features[0][0] = nn.Conv2d(input_channels, 96, kernel_size=(4, 4), stride=(4, 4), padding=(1, 1), bias=False)
             self.model.head = nn.Identity()
+            output_size = 768
+        elif model_name == 'timesformer':
+            self.model = TimeSformer(img_size=self.in_shape[2], num_classes=1, num_frames=input_channels, in_chans=1, attention_type='divided_space_time')
+            # self.model = TimeSformer(img_size=512, num_classes=1, num_frames=9, num_layers=12, num_heads=8, qkv_bias=True, in_chans=1, window_size=8, mlp_ratio=4, qk_scale=None, drop_rate=0., attn_drop_rate=0., drop_path_rate=0., norm_layer=nn.LayerNorm, ape=False, patch_norm=True, use_abs_pos_emb=True, use_rel_pos_bias=True, init_values=1e-4)
+            print(self.model)
             output_size = 768
         # print(self.model)
         

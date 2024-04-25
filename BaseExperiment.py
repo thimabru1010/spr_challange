@@ -44,7 +44,9 @@ class BaseExperiment():
             aux_clssf=self.aux_clssf, input_channels=training_config['in_shape'][0]).to(self.device)
         # self.model = self._build_model(in_shape, 'resnet18', self.aux_clssf)
         
-        if training_config['backbone'] != 'swin':
+        if training_config['backbone'] == 'timesformer':
+            print(summary(self.model, (training_config['batch_size'], 1, in_shape[0], in_shape[1], in_shape[2])))   
+        elif training_config['backbone'] != 'swin':
             print(summary(self.model, (training_config['batch_size'], in_shape[0], in_shape[1], in_shape[2])))
         else:
             print(self.model)
