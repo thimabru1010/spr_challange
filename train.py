@@ -10,6 +10,7 @@ from utils import read_files
 from sklearn.model_selection import train_test_split
 import os
 import argparse
+from torchvision import transforms
 
 # Argparsers
 parser = argparse.ArgumentParser()
@@ -36,6 +37,7 @@ parser.add_argument('-optm', '--optmizer', type=str, default='adam', help='Optmi
 parser.add_argument('--momentum', type=float, default=0.9, help='SGD momentum')
 parser.add_argument('--sched_step_size', type=int, default=1, help='SGD momentum')
 parser.add_argument('--sched_decay_factor', type=float, default=0.9, help='SGD momentum')
+parser.add_argument('--use_data_aug', action='store_true', help='Enables data augmentation')
 args = parser.parse_args()
 
 batch_size = args.batch_size
@@ -55,7 +57,26 @@ if args.clssf_weights:
 
 print(root_dir)
 
-transform = None
+if args.use_data_aug:
+    prob = 0.5
+    transform = transforms.Compose(
+        [
+            transforms.Resize(256),
+            transforms.RandomRotate90(p=prob),
+            transforms.OneOf([transforms.HorizontalFlip(p=prob), transforms.VerticalFlip(p=prob)]),
+            transforms.ToTensor()
+        ])
+
+    val_transform = transforms.Compose(
+        [
+            transforms.Resize(256),
+            transforms.ToTensor()
+        ])
+else:
+    transform = None
+    val_transform = None
+
+
 print(args.backbone)
 training_config = {
     'batch_size': batch_size,
@@ -113,7 +134,7 @@ if not args.deactivate_train:
             
     train_set = HeadCTScan(root_dir, args.label_path, train_files, transform=transform, Debug=Debug,\
         aux_clssf=args.aux_clssf, training_config=training_config)
-    val_set = HeadCTScan_Val(root_dir2, args.label_path, val_files, transform=transform, Debug=Debug,\
+    val_set = HeadCTScan_Val(root_dir2, args.label_path, val_files, transform=val_transform, Debug=Debug,\
         aux_clssf=args.aux_clssf, training_config=training_config)
     print(len(train_set), len(val_set))
 
@@ -134,7 +155,7 @@ if not args.deactivate_train:
 if not args.deactivate_test:
     test_files = os.listdir(test_dir)
 
-    test_set = HeadCTScan_TestSubmission(root_dir=test_dir, data_files=test_files, Debug=Debug)
+    test_set = HeadCTScan_TestSubmission(root_dir=test_dir, data_files=test_files, Debug=Debug, transform=val_transform)
 
     dataloader_test = torch.utils.data.DataLoader(
         test_set, batch_size=batch_size_val, shuffle=False, pin_memory=True)
