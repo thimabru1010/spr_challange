@@ -93,7 +93,7 @@ class BaseExperiment():
             # Zero your gradients for every batch!
             self.optm.zero_grad()
             
-            inputs = inputs.unsqueeze(1)
+            # inputs = inputs.unsqueeze(1)
             # print(inputs.shape)
             y_pred, y_clssf = self.model(inputs.to(self.device))
 
@@ -134,7 +134,7 @@ class BaseExperiment():
             for inputs, labels, _, group in tqdm(self.valloader):
             # for inputs, labels, _ in tqdm(self.valloader):
             
-                inputs = inputs.unsqueeze(1)
+                # inputs = inputs.unsqueeze(1)
                 # print(inputs.shape)
                 y_pred, y_clssf = self.model(inputs.to(self.device))
                 
@@ -277,7 +277,7 @@ def test_model(testloader, training_config):
             
             # print('debug')
             # print(inputs.shape)
-            inputs = inputs.unsqueeze(1)
+            # inputs = inputs.unsqueeze(1)
             y_pred_s, _ = model(inputs.to(device))
             y_pred = y_pred_s
             if training_config['in_shape'][0] == 1:
