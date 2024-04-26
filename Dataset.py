@@ -77,7 +77,7 @@ class HeadCTScan(Dataset):
         print('DEBUG')
         print(data.shape)
         if self.transform:
-            data = self.transform(data.transpose(1, 2, 0)).permute(2, 0, 1)
+            data = self.transform(data.transpose(1, 2, 0))#.permute(2, 0, 1)
             labels = torch.tensor(labels)
             groups = torch.tensor(groups)
         else:
@@ -149,7 +149,7 @@ class HeadCTScan_Val(Dataset):
         # data = np.expand_dims(data, axis=1)
             
         if self.transform:
-            data = self.transform(data.transpose(1, 2, 0)).permute(2, 0, 1)
+            data = self.transform(data.transpose(1, 2, 0))#.permute(2, 0, 1)
             labels = torch.tensor(labels)
             groups = torch.tensor(groups)
         else:
@@ -207,7 +207,7 @@ class HeadCTScan_TestSubmission(Dataset):
             data = ((data - dcm_min) / (dcm_max - dcm_min))   # min-max normalization (0,1) 
             
         if self.transform:
-            data = self.transform(data.transpose(1, 2, 0)).permute(2, 0, 1)
+            data = self.transform(data.transpose(1, 2, 0))#.permute(2, 0, 1)
         else:
             data = torch.tensor(data, dtype=torch.float32)
 
