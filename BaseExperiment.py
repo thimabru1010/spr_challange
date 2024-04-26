@@ -94,7 +94,7 @@ class BaseExperiment():
             self.optm.zero_grad()
             
             inputs = inputs.unsqueeze(1)
-            print(inputs.shape)
+            # print(inputs.shape)
             y_pred, y_clssf = self.model(inputs.to(self.device))
 
             # print(y_pred)
