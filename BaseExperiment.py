@@ -277,6 +277,7 @@ def test_model(testloader, training_config):
             
             # print('debug')
             # print(inputs.shape)
+            inputs = inputs.unsqueeze(1)
             y_pred_s, _ = model(inputs.to(device))
             y_pred = y_pred_s
             if training_config['in_shape'][0] == 1:
