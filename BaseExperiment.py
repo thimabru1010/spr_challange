@@ -135,7 +135,7 @@ class BaseExperiment():
             # for inputs, labels, _ in tqdm(self.valloader):
             
                 inputs = inputs.unsqueeze(1)
-                print(inputs.shape)
+                # print(inputs.shape)
                 y_pred, y_clssf = self.model(inputs.to(self.device))
                 
                 loss = self.loss(y_pred, labels.to(self.device))

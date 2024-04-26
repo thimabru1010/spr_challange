@@ -347,7 +347,7 @@ class TimeSformer(nn.Module):
         self.pretrained=False
         depth = 2
         self.model = VisionTransformer(img_size=img_size, num_classes=num_classes, patch_size=patch_size,\
-            embed_dim=768, depth=depth, num_heads=6, mlp_ratio=4, qkv_bias=True,\
+            embed_dim=768, depth=depth, num_heads=12, mlp_ratio=4, qkv_bias=True,\
                 norm_layer=partial(nn.LayerNorm, eps=1e-6), drop_rate=0., attn_drop_rate=0., drop_path_rate=0.1,\
                     num_frames=num_frames, attention_type=attention_type, in_chans=in_chans, **kwargs)
 
