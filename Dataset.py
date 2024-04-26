@@ -74,7 +74,7 @@ class HeadCTScan(Dataset):
             data = ((data - dcm_min) / (dcm_max - dcm_min))   # min-max normalization (0,1) 
             
         # data = np.expand_dims(data, axis=1)
-            
+        print(data.shape)
         if self.transform:
             data = self.transform(data)
             labels = torch.tensor(labels)
