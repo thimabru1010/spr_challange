@@ -134,7 +134,7 @@ if not args.deactivate_train:
         if args.n_slices == -1:
             n_slices_lst = train_nchannels
         for i, filename in enumerate(_train_files):
-            for j in n_slices_lst:
+            for j in range(n_slices_lst[i]):
                 train_files.append(filename + '_' + str(j))
     else:
         train_files = _train_files
