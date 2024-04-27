@@ -170,6 +170,7 @@ class BaseExperiment():
         with torch.no_grad():
             for inputs, labels, _, group in tqdm(self.valloader):            
                 
+                
                 # print(inputs.shape, labels.shape)
                 inputs = inputs.permute(1, 0, 2, 3)
                 y_pred_s, y_clssf_s = self.model(inputs.to(self.device))

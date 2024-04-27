@@ -129,6 +129,7 @@ class HeadCTScan_Val(Dataset):
         if data.shape[0] >= 200:
             data = data[::2, :, :]
             
+        print(data.shape)
         data = data.transpose(2, 0, 1)
         data = data[:, :512, :512]
         
