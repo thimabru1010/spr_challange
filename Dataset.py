@@ -45,7 +45,10 @@ class HeadCTScan(Dataset):
         print(data.shape)
         
         if '_' in file_name:
-            b = data.reshape((data.shape[0], data.shape[1], 1))        
+            if len(data.shape) == 2:
+                b = data.reshape((data.shape[0], data.shape[1], 1))
+            else:
+                b = data[:, :, 0] # Algumas imagens tem 2 canais        
             data = b.transpose(2, 0, 1)
             data = data[:, :512, :512]
         else:
