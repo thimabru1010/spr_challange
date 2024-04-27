@@ -123,7 +123,9 @@ class HeadCTScan_Val(Dataset):
         # print(file_name)
         # data = nib.load(self.root_dir + '/' + file_name).get_fdata()
         data = nib.load(self.root_dir + '/' + file_name + self.sufix + '.nii.gz').get_fdata() # Load a n channel image
-        print(data.shape)
+        if len(data.shape) == 4:
+            data = data[:, :, :, :1]
+            
         if data.shape[0] >= 200:
             data = data[::2, :, :]
             
