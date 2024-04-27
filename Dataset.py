@@ -91,7 +91,7 @@ class HeadCTScan_Val(Dataset):
         self.root_dir = root_dir
         self.data_files = data_files
         if Debug:
-            self.data_files = self.data_files[:20]
+            self.data_files = self.data_files#[:20]
         
         self.labels = pd.read_csv(label_path,  converters={'StudyID': str})
         self.labels['StudyID_pure'] = self.labels['StudyID'].apply(lambda x: x.split('_')[0])      
@@ -123,7 +123,7 @@ class HeadCTScan_Val(Dataset):
         # print(file_name)
         # data = nib.load(self.root_dir + '/' + file_name).get_fdata()
         data = nib.load(self.root_dir + '/' + file_name + self.sufix + '.nii.gz').get_fdata() # Load a n channel image
-        
+        print(data.shape)
         if data.shape[0] >= 200:
             data = data[::2, :, :]
             
