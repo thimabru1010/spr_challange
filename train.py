@@ -114,7 +114,7 @@ if not args.deactivate_train:
     
     df_tmp = df[['Group', 'StudyID_pure', 'n_channels']]
     df_tmp = df_tmp.drop_duplicates()
-    print(df.head(10))
+    print(df_tmp.head(10))
     list_groups = df_tmp['Group'].tolist()
     # list_groups = groups['Age'].tolist()
     filenames = df_tmp['StudyID_pure'].tolist()

@@ -84,7 +84,7 @@ class HeadCTScan_Val(Dataset):
     def __init__(self, root_dir: Path, label_path: Path, data_files: list, normalize: bool=True, transform: torchvision.transforms=None,
                 Debug: bool=False, aux_clssf: bool=False, training_config=None):
         super(HeadCTScan_Val, self).__init__()
-        print('DEBUG')
+        # print('DEBUG')
         self.root_dir = root_dir
         self.data_files = data_files
         if Debug:
