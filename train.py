@@ -109,11 +109,14 @@ if not args.deactivate_train:
     df = pd.read_csv(args.label_path, converters={'StudyID': str})
     df['StudyID_pure'] = df['StudyID'].apply(lambda x: x.split('_')[0])
 
-    df.groupby('StudyID_pure').size().reset_index(name='n_channels')
+    grouped_channels = df.groupby('StudyID_pure').size().reset_index(name='n_channels')
     print(df.shape)
-
+    
+    df = pd.merge(df, grouped_channels, on='StudyID_pure')
     df_tmp = df[['Group', 'StudyID_pure', 'n_channels']]
     df_tmp = df_tmp.drop_duplicates()
+    print(df_tmp.head(10))
+    1/0
     list_groups = df_tmp['Group'].tolist()
     # list_groups = groups['Age'].tolist()
     filenames = df_tmp['StudyID_pure'].tolist()
