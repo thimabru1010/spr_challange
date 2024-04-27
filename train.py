@@ -135,6 +135,8 @@ if not args.deactivate_train:
             n_slices_lst = train_nchannels
         for i, filename in enumerate(_train_files):
             for j in range(n_slices_lst[i]):
+                if n_slices_lst[i] >= 200 and j % 2 == 0:
+                    continue
                 train_files.append(filename + '_' + str(j))
     else:
         train_files = _train_files
