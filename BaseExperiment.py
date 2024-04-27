@@ -139,8 +139,7 @@ class BaseExperiment():
                 y_pred, y_clssf = self.model(inputs.to(self.device))
                 
                 loss = self.loss(y_pred, labels.to(self.device))
-                mae = self.mae(y_pred, labels.to(self.device))
-                # mae = self.mae(y_pred*(89 - 18) + 18, labels.to(self.device)*(89 - 18) + 18)                
+                mae = self.mae(y_pred, labels.to(self.device))              
                 clssf_loss = self.ce(y_clssf, group.to(self.device))
                 
                 total_loss = loss

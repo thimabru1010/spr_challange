@@ -54,12 +54,6 @@ class HeadCTScan(Dataset):
         
         # print(data.shape)
         labels = self.labels[file_name.lstrip('0')]
-        # labels = (labels - 18) / (89 - 18)
-        # labels = self.labels[file_name.split('/')[-1].split('_')[0].lstrip('0')]
-        #labels = self.labels[file_name.split('.')[0].lstrip('0')]
-        # if self.aux_clssf:
-        #     # Idade min = 18; Idade Max = 89
-        #     labels = (labels - 18) / (89 - 18)
         
         groups = self.groups[file_name.lstrip('0')]   
         # groups = self.groups[file_name.split('_')[0].lstrip('0')]             
@@ -112,6 +106,10 @@ class HeadCTScan_Val(Dataset):
         self.transform = transform
         
         self.aux_clssf = aux_clssf
+        
+        self.sufix = ''
+        if training_config['n_slices'] == -1:
+            self.sufix = 'full'
     
     def __len__(self):
         return len(self.data_files)
@@ -121,7 +119,7 @@ class HeadCTScan_Val(Dataset):
         
         # print(file_name)
         # data = nib.load(self.root_dir + '/' + file_name).get_fdata()
-        data = nib.load(self.root_dir + '/' + file_name + '.nii.gz').get_fdata() # Load a n channel image
+        data = nib.load(self.root_dir + '/' + file_name + self.sufix + '.nii.gz').get_fdata() # Load a n channel image
         
         data = data.transpose(2, 0, 1)
         data = data[:, :512, :512]
@@ -177,6 +175,10 @@ class HeadCTScan_TestSubmission(Dataset):
         self.normalize = normalize
         self.transform = transform
     
+        # self.sufix = ''
+        # if training_config['n_slices'] == -1:
+        #     self.sufix = 'full'
+            
     def __len__(self):
         return len(self.data_files)
 
