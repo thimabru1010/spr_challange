@@ -108,6 +108,8 @@ if not args.deactivate_train:
     # estratificado
     df = pd.read_csv(args.label_path, converters={'StudyID': str})
     df['StudyID_pure'] = df['StudyID'].apply(lambda x: x.split('_')[0])
+    print(df.head(10))
+    1/0
     df['n_channels'] = df.groupby('StudyID_pure')['StudyID_pure'].transform('count')
     print(df.shape)
 
