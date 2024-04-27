@@ -42,7 +42,7 @@ class HeadCTScan(Dataset):
         # print(file_name)
         # data = nib.load(self.root_dir + '/' + file_name).get_fdata()
         data = nib.load(self.root_dir + '/' + file_name + '.nii.gz').get_fdata()
-        # print(data.shape)
+        print(data.shape)
         
         if '_' in file_name:
             b = data.reshape((data.shape[0], data.shape[1], 1))        
