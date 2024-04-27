@@ -48,7 +48,7 @@ class HeadCTScan(Dataset):
             if len(data.shape) == 2:
                 b = data.reshape((data.shape[0], data.shape[1], 1))
             else:
-                b = data[:, :, 0] # Algumas imagens tem 2 canais        
+                b = data[:, :, :1] # Algumas imagens tem 2 canais        
             data = b.transpose(2, 0, 1)
             data = data[:, :512, :512]
         else:
