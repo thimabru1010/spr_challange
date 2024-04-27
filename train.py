@@ -110,12 +110,11 @@ if not args.deactivate_train:
     df['StudyID_pure'] = df['StudyID'].apply(lambda x: x.split('_')[0])
 
     grouped_channels = df.groupby('StudyID_pure').size().reset_index(name='n_channels')
-    print(df.shape)
-    
     df = pd.merge(df, grouped_channels, on='StudyID_pure')
+    
     df_tmp = df[['Group', 'StudyID_pure', 'n_channels']]
     df_tmp = df_tmp.drop_duplicates()
-
+    print(df.head(10))
     list_groups = df_tmp['Group'].tolist()
     # list_groups = groups['Age'].tolist()
     filenames = df_tmp['StudyID_pure'].tolist()
@@ -125,7 +124,7 @@ if not args.deactivate_train:
     # _train_files = filenames[:2]
     # val_files = filenames[-1:]
     # print(_train_files, val_files)
-    _train_files, val_files = train_test_split(filenames, test_size=0.2, random_state=42, stratify=list_groups)
+    _train_files, val_files, train_nchannels, _ = train_test_split(filenames, n_channels, test_size=0.2, random_state=42, stratify=list_groups)
     
     print(f'Patients Count Train: {len(_train_files)} - Val: {len(val_files)}')
     
@@ -133,7 +132,7 @@ if not args.deactivate_train:
         train_files = []
         n_slices_lst = list(range(args.n_slices))
         if args.n_slices == -1:
-            n_slices_lst = n_channels
+            n_slices_lst = train_nchannels
         for i, filename in enumerate(_train_files):
             for j in n_slices_lst:
                 train_files.append(filename + '_' + str(j))
