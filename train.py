@@ -130,7 +130,7 @@ if not args.deactivate_train:
     
     if args.n_slices != args.input_channels:
         train_files = []
-        n_slices_lst = list(range(args.n_slices))
+        n_slices_lst = [args.n_slices for _ in range(len(_train_files))]
         if args.n_slices == -1:
             n_slices_lst = train_nchannels
         for i, filename in enumerate(_train_files):
