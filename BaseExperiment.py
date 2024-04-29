@@ -76,7 +76,7 @@ class BaseExperiment():
                 print(f'Last Learning Rate used: {checkpoint["lr"]}')
             else:
                 self.model.load_state_dict(checkpoint)
-            print('Checkpoint loaded!')
+            print(f'Checkpoint {training_config['load_checkpoint']} loaded!')
             print('='*50)
         
         
