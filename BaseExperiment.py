@@ -50,12 +50,25 @@ class BaseExperiment():
             print(summary(self.model, (training_config['batch_size'], in_shape[0], in_shape[1], in_shape[2])))
         else:
             print(self.model)
-        self.model= nn.DataParallel(self.model)
         
         if training_config['optimizer'] == 'adam':
             self.optm = optm.Adam(self.model.parameters(), lr=training_config['lr'])
         elif training_config['optimizer'] == 'sgd':
             self.optm = optm.SGD(self.model.parameters(), lr=training_config['lr'], momentum=training_config['momentum'])
+        self.optm_name = training_config['optimizer']
+        
+        self.initial_epoch = 0
+        if training_config['load_checkpoint'] is not None:
+            print('='*50)
+            checkpoint = torch.load(training_config['load_checkpoint'])
+            self.model.load_state_dict(checkpoint['model_state_dict'])
+            self.optm.load_state_dict(checkpoint['optimizer_state_dict'])
+            self.initial_epoch = checkpoint['epoch']
+            print(f'Last Learning Rate used: {checkpoint['lr']}')
+            print('Checkpoint loaded!')
+            print('='*50)
+        
+        self.model= nn.DataParallel(self.model)
         
         self.scheduler = StepLR(self.optm, step_size=training_config['sched_step_size'],\
             gamma=training_config['sched_decay_factor'])
@@ -66,9 +79,6 @@ class BaseExperiment():
         self.ce = nn.CrossEntropyLoss()
         if training_config['clssf_weights'] is not None:
             self.ce = nn.CrossEntropyLoss(weight=torch.Tensor(training_config['clssf_weights']))
-
-        # self.loss = nn.MSELoss()
-        # self.mae = nn.L1Loss()
         
         self.trainloader = trainloader
         self.valloader = valloader
@@ -217,7 +227,7 @@ class BaseExperiment():
     def train(self):
         min_val_loss = float('inf')
         early_stop_counter = 0
-        for epoch in range(self.epochs):
+        for epoch in range(self.initial_epoch, self.epochs):
             
             train_loss, sum_clssf_loss, sum_reg_loss = self.train_one_epoch()
             
@@ -232,7 +242,11 @@ class BaseExperiment():
             if val_loss + self.delta < min_val_loss:
                 min_val_loss = val_loss
                 early_stop_counter = 0
-                torch.save(self.model.state_dict(), os.path.join(self.work_dir_path, 'checkpoint.pth'))
+                checkpoint = {'epoch': epoch, 'model_state_dict': self.model.state_dict(),\
+                    'optimizer_state_dict': self.optm.state_dict(), 'optm_name':self.optm_name , 'loss': val_loss,\
+                        'lr': last_lr}
+                torch.save(checkpoint, os.path.join(self.work_dir_path, 'checkpoint.pth'))
+                # torch.save(self.model.state_dict(), os.path.join(self.work_dir_path, 'checkpoint.pth'))
             else:
                 early_stop_counter += 1
                 print(f"Val loss didn't improve! Early Stopping counter: {early_stop_counter}")                
@@ -264,7 +278,12 @@ def test_model(testloader, training_config):
     # model = _build_model(in_shape, 'resnet18', training_config['classification_head']).to(device)
     
     model= nn.DataParallel(model)
-    model.load_state_dict(torch.load(os.path.join(work_dir_path, 'checkpoint.pth')))
+    checkpoint = torch.load(os.path.join(work_dir_path, 'checkpoint.pth'))
+    if isinstance(checkpoint, dict):
+        model.load_state_dict(checkpoint['model_state_dict'])
+    else:
+        model.load_state_dict(checkpoint)
+    # model.load_state_dict(torch.load(os.path.join(work_dir_path, 'checkpoint.pth')))
     model.eval()
     
     # Disable gradient computation and reduce memory consumption.
