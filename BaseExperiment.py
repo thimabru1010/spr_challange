@@ -68,7 +68,7 @@ class BaseExperiment():
                 self.model.load_state_dict(checkpoint['model_state_dict'])
                 self.optm.load_state_dict(checkpoint['optimizer_state_dict'])
                 self.initial_epoch = checkpoint['epoch']
-                print(f'Last Learning Rate used: {checkpoint['lr']}')
+                print(f'Last Learning Rate used: {checkpoint["lr"]}')
             else:
                 self.model.load_state_dict(checkpoint)
             print('Checkpoint loaded!')
