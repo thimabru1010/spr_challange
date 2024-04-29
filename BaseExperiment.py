@@ -44,7 +44,6 @@ class BaseExperiment():
             aux_clssf=self.aux_clssf, input_channels=training_config['in_shape'][0],\
                 pretrained=training_config['pretrained_model']).to(self.device)
         # self.model = self._build_model(in_shape, 'resnet18', self.aux_clssf)
-        self.model = nn.DataParallel(self.model)
         
         if training_config['backbone'] == 'timesformer':
             print(summary(self.model, (training_config['batch_size'], 1, in_shape[0], in_shape[1], in_shape[2])))   
@@ -52,6 +51,8 @@ class BaseExperiment():
             print(summary(self.model, (training_config['batch_size'], in_shape[0], in_shape[1], in_shape[2])))
         else:
             print(self.model)
+            
+        self.model = nn.DataParallel(self.model)
         
         if training_config['optimizer'] == 'adam':
             self.optm = optm.Adam(self.model.parameters(), lr=training_config['lr'],\
