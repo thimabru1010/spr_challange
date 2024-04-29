@@ -44,6 +44,7 @@ class BaseExperiment():
             aux_clssf=self.aux_clssf, input_channels=training_config['in_shape'][0],\
                 pretrained=training_config['pretrained_model']).to(self.device)
         # self.model = self._build_model(in_shape, 'resnet18', self.aux_clssf)
+        self.model = nn.DataParallel(self.model)
         
         if training_config['backbone'] == 'timesformer':
             print(summary(self.model, (training_config['batch_size'], 1, in_shape[0], in_shape[1], in_shape[2])))   
@@ -59,6 +60,7 @@ class BaseExperiment():
             self.optm = optm.SGD(self.model.parameters(), lr=training_config['lr'],\
                 momentum=training_config['momentum'], weight_decay=training_config['weight_decay'])
         self.optm_name = training_config['optimizer']
+        
         
         self.initial_epoch = 0
         if training_config['load_checkpoint'] is not None:
@@ -76,7 +78,6 @@ class BaseExperiment():
             print('Checkpoint loaded!')
             print('='*50)
         
-        self.model= nn.DataParallel(self.model)
         
         self.scheduler = StepLR(self.optm, step_size=training_config['sched_step_size'],\
             gamma=training_config['sched_decay_factor'])
