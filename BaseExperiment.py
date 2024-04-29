@@ -64,10 +64,13 @@ class BaseExperiment():
         if training_config['load_checkpoint'] is not None:
             print('='*50)
             checkpoint = torch.load(training_config['load_checkpoint'])
-            self.model.load_state_dict(checkpoint['model_state_dict'])
-            self.optm.load_state_dict(checkpoint['optimizer_state_dict'])
-            self.initial_epoch = checkpoint['epoch']
-            print(f'Last Learning Rate used: {checkpoint['lr']}')
+            if isinstance(checkpoint, dict):
+                self.model.load_state_dict(checkpoint['model_state_dict'])
+                self.optm.load_state_dict(checkpoint['optimizer_state_dict'])
+                self.initial_epoch = checkpoint['epoch']
+                print(f'Last Learning Rate used: {checkpoint['lr']}')
+            else:
+                self.model.load_state_dict(checkpoint)
             print('Checkpoint loaded!')
             print('='*50)
         
