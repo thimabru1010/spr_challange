@@ -61,21 +61,22 @@ if args.clssf_weights:
 print(root_dir)
 
 if args.use_data_aug:
-    prob = 0.5
+    prob = 0.6
     transform = transforms.Compose(
         [
             transforms.ToTensor(),
-            transforms.Resize((256))
-            # transforms.RandomApply([transforms.RandomRotation(degrees=90)], p=prob),
-            # transforms.RandomApply([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()], p=prob)
+            # transforms.Resize((256))
+            transforms.RandomApply([transforms.RandomRotation(degrees=90)], p=prob),
+            transforms.RandomApply([transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip()], p=prob)
         ])
 
     val_transform = transforms.Compose(
         [
             transforms.ToTensor(),
-            transforms.Resize((256))
+            # transforms.Resize((256))
         ])
-    img_size = 256
+    # img_size = 256
+    img_size = 512
 else:
     transform = None
     val_transform = None
