@@ -64,7 +64,7 @@ class BaseExperiment():
         if training_config['load_checkpoint'] is not None:
             print('='*50)
             checkpoint = torch.load(training_config['load_checkpoint'])
-            print(checkpoint.keys())
+            # print(checkpoint.keys())
             # if isinstance(checkpoint, dict):
             if 'model_state_dict' in checkpoint.keys():
                 self.model.load_state_dict(checkpoint['model_state_dict'])
