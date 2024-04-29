@@ -64,7 +64,9 @@ class BaseExperiment():
         if training_config['load_checkpoint'] is not None:
             print('='*50)
             checkpoint = torch.load(training_config['load_checkpoint'])
-            if isinstance(checkpoint, dict):
+            print(checkpoint.keys())
+            # if isinstance(checkpoint, dict):
+            if 'model_state_dict' in checkpoint.keys():
                 self.model.load_state_dict(checkpoint['model_state_dict'])
                 self.optm.load_state_dict(checkpoint['optimizer_state_dict'])
                 self.initial_epoch = checkpoint['epoch']
@@ -285,7 +287,8 @@ def test_model(testloader, training_config):
     
     model= nn.DataParallel(model)
     checkpoint = torch.load(os.path.join(work_dir_path, 'checkpoint.pth'))
-    if isinstance(checkpoint, dict):
+    # if isinstance(checkpoint, dict):
+    if 'model_state_dict' in checkpoint.keys():
         model.load_state_dict(checkpoint['model_state_dict'])
     else:
         model.load_state_dict(checkpoint)
