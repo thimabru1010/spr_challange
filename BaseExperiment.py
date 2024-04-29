@@ -53,9 +53,11 @@ class BaseExperiment():
             print(self.model)
         
         if training_config['optimizer'] == 'adam':
-            self.optm = optm.Adam(self.model.parameters(), lr=training_config['lr'])
+            self.optm = optm.Adam(self.model.parameters(), lr=training_config['lr'],\
+                weight_decay=training_config['weight_decay'])
         elif training_config['optimizer'] == 'sgd':
-            self.optm = optm.SGD(self.model.parameters(), lr=training_config['lr'], momentum=training_config['momentum'])
+            self.optm = optm.SGD(self.model.parameters(), lr=training_config['lr'],\
+                momentum=training_config['momentum'], weight_decay=training_config['weight_decay'])
         self.optm_name = training_config['optimizer']
         
         self.initial_epoch = 0

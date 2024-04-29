@@ -35,6 +35,7 @@ parser.add_argument('--norm_max', type=int, default=1024, help='Normalization ma
 parser.add_argument('-lr', '--learning_rate', type=float, default=1e-4, help='Learning rate')
 parser.add_argument('-optm', '--optmizer', type=str, default='adam', help='Optmizer')
 parser.add_argument('--momentum', type=float, default=0.9, help='SGD momentum')
+parser.add_argument('--weight_decay', type=float, default=0, help='Enables L2 regularization')
 parser.add_argument('--sched_step_size', type=int, default=1, help='SGD momentum')
 parser.add_argument('--sched_decay_factor', type=float, default=0.9, help='SGD momentum')
 parser.add_argument('--use_data_aug', action='store_true', help='Enables data augmentation')
@@ -99,6 +100,7 @@ training_config = {
     'norm_max': args.norm_max,
     'optimizer': args.optmizer,
     'momentum': args.momentum,
+    'weight_decay': args.weight_decay,
     'sched_step_size': args.sched_step_size,
     'sched_decay_factor': args.sched_decay_factor,
     'load_checkpoint': args.load_checkpoint,
