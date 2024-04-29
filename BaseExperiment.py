@@ -41,7 +41,8 @@ class BaseExperiment():
         self.aux_clssf = training_config['classification_head']
         print('Input shape:', in_shape)
         self.model = RegressionModel(in_shape=in_shape, model_name=training_config['backbone'],\
-            aux_clssf=self.aux_clssf, input_channels=training_config['in_shape'][0]).to(self.device)
+            aux_clssf=self.aux_clssf, input_channels=training_config['in_shape'][0],\
+                pretrained=training_config['pretrained_model']).to(self.device)
         # self.model = self._build_model(in_shape, 'resnet18', self.aux_clssf)
         
         if training_config['backbone'] == 'timesformer':

@@ -8,9 +8,12 @@ from torchsummary import summary
 # from torchinfo import summary
 
 class RegressionModel(nn.Module):
-    def __init__(self, in_shape, model_name, aux_clssf=False, input_channels=1, **kwargs):
+    def __init__(self, in_shape, model_name, aux_clssf=False, input_channels=1, pretrained=False, **kwargs):
         super(RegressionModel, self).__init__()
         self.in_shape = in_shape
+        weights = None
+        if pretrained:
+            weights = 'IMAGENET1K_V1'
         print(f'Using model: {model_name}')
         if 'resnet' in model_name:
             if model_name == 'resnet50':
@@ -26,78 +29,77 @@ class RegressionModel(nn.Module):
                 padding=(3, 3), bias=False)
             self.model.fc = nn.Identity()
         elif model_name == 'densenet121':
-            self.model = densenet121(weights=None)
+            self.model = densenet121(weights=weights)
             self.model.features[0] = nn.Conv2d(input_channels, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
             self.model.classifier = nn.Identity()
             output_size = 1024
         elif model_name == 'densenet161':
-            self.model = densenet161(weights=None)
+            self.model = densenet161(weights=weights)
             self.model.features[0] = nn.Conv2d(input_channels, 96, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
             self.model.classifier = nn.Identity()
             output_size = 2208
         elif model_name == 'densenet169':
-            self.model = densenet169(weights=None)
+            self.model = densenet169(weights=weights)
             self.model.features[0] = nn.Conv2d(input_channels, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
             self.model.classifier = nn.Identity()
             output_size = 1664
         elif model_name == 'densenet201':
-            self.model = densenet201(weights=None)
+            self.model = densenet201(weights=weights)
             self.model.features[0] = nn.Conv2d(input_channels, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
             self.model.classifier = nn.Identity()
             output_size = 1920
         elif model_name == 'efficientnet_b0':
-            self.model = efficientnet_b0(weights=None)
+            self.model = efficientnet_b0(weights=weights)
             self.model.features[0] = nn.Conv2d(input_channels, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
             self.model.classifier[1] = nn.Identity()
             output_size = 1280
         elif model_name == 'efficientnet_b1':
-            self.model = efficientnet_b1(weights=None)
+            self.model = efficientnet_b1(weights=weights)
             self.model.features[0] = nn.Conv2d(input_channels, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
             self.model.classifier[1] = nn.Identity()
             output_size = 1280
         elif model_name == 'efficientnet_b2':
-            self.model = efficientnet_b2(weights=None)
+            self.model = efficientnet_b2(weights=weights)
             self.model.features[0] = nn.Conv2d(input_channels, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
             self.model.classifier[1] = nn.Identity()
             output_size = 1408
         elif model_name == 'efficientnet_b3':
-            self.model = efficientnet_b3(weights=None)
+            self.model = efficientnet_b3(weights=weights)
             self.model.features[0] = nn.Conv2d(input_channels, 40, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
             self.model.classifier[1] = nn.Identity()
             output_size = 1536
         elif model_name == 'efficientnet_b4':
-            self.model = efficientnet_b4(weights=None)
+            self.model = efficientnet_b4(weights=weights)
             self.model.features[0] = nn.Conv2d(input_channels, 48, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
             self.model.classifier[1] = nn.Identity()
             output_size = 1792
-        # TODO: Implement efficientnet_b5
         elif model_name == 'efficientnet_b5':
-            self.model = efficientnet_b5(weights=None)
+            self.model = efficientnet_b5(weights=weights)
             self.model.features[0] = nn.Conv2d(input_channels, 48, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
             self.model.classifier[1] = nn.Identity()
             output_size = 2048
         elif model_name == 'efficientnet_b6':
-            self.model = efficientnet_b6(weights=None)
+            self.model = efficientnet_b6(weights=weights)
             self.model.features[0] = nn.Conv2d(input_channels, 56, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
             self.model.classifier[1] = nn.Identity()
             output_size = 2304
         elif model_name == 'efficientnet_b7':
-            self.model = efficientnet_b7(weights=None)
+            self.model = efficientnet_b7(weights=weights)
             self.model.features[0] = nn.Conv2d(input_channels, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
             self.model.classifier[1] = nn.Identity()
             output_size = 2560
         elif model_name == 'efficientnet_v2_s':
-            self.model = efficientnet_v2_s(weights=None)
+            self.model = efficientnet_v2_s(weights=weights)
             self.model.features[0] = nn.Conv2d(input_channels, 24, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
             self.model.classifier[1] = nn.Identity()
             output_size = 1280
         elif model_name == 'efficientnet_v2_m':
-            self.model = efficientnet_v2_m(weights=None)
+            self.model = efficientnet_v2_m(weights=weights)
             self.model.features[0] = nn.Conv2d(input_channels, 24, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
             self.model.classifier[1] = nn.Identity()
             output_size = 1280
         elif model_name == 'efficientnet_v2_l':
-            self.model = efficientnet_v2_l(weights=None)
+            self.model = efficientnet_v2_l(weights=weights)
             self.model.features[0] = nn.Conv2d(input_channels, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
             self.model.classifier[1] = nn.Identity()
             output_size = 1280

@@ -39,6 +39,7 @@ parser.add_argument('--sched_step_size', type=int, default=1, help='SGD momentum
 parser.add_argument('--sched_decay_factor', type=float, default=0.9, help='SGD momentum')
 parser.add_argument('--use_data_aug', action='store_true', help='Enables data augmentation')
 parser.add_argument('--load_checkpoint', type=str, default=None, help='Path to checkpoint to continue training')
+parser.add_argument('--pretrained_model', action='store_true', help='Enables pretrained model on ImageNet')
 args = parser.parse_args()
 
 batch_size = args.batch_size
@@ -100,7 +101,8 @@ training_config = {
     'momentum': args.momentum,
     'sched_step_size': args.sched_step_size,
     'sched_decay_factor': args.sched_decay_factor,
-    'load_checkpoint': args.load_checkpoint
+    'load_checkpoint': args.load_checkpoint,
+    'pretrained_model': args.pretrained_model
 }
 
 if not args.deactivate_train:
