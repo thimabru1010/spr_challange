@@ -142,6 +142,7 @@ if not args.deactivate_train:
             n_slices_lst = train_nchannels
         for i, filename in enumerate(_train_files):
             for j in range(n_slices_lst[i]):
+                #! Remove the first 30% of the slices
                 if n_slices_lst[i] >= 200 and j % 2 == 0 or j <= int(0.3*n_slices_lst[i]):
                     continue
                 train_files.append(filename + '_' + str(j))
