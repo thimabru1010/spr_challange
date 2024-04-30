@@ -231,4 +231,4 @@ class HeadCTScan_TestSubmission(Dataset):
         else:
             data = torch.tensor(data, dtype=torch.float32)
 
-        return data, file_name.split('.')[0].split('full')[0]
+        return data, int(file_name.split('.')[0].split('full')[0])
