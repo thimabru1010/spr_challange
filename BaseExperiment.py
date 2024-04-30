@@ -305,7 +305,7 @@ def test_model(testloader, training_config):
             if training_config['in_shape'][0] == 1:
                 inputs = inputs.permute(1, 0, 2, 3)
             
-            print('debug')
+            print('debug TEST')
             print(inputs.shape)
             # inputs = inputs.unsqueeze(1)
             y_pred_s, _ = model(inputs.to(device))
