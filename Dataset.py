@@ -126,15 +126,15 @@ class HeadCTScan_Val(Dataset):
         if len(data.shape) == 4:
             data = data[:, :, :, 0]
         
-        print('DEBUG VAL')
+        # print('DEBUG VAL')
         #! Remove the first 30% of the slices
         data = data[:, :, int(0.3*data.shape[2]):]
         
-        print(data.shape)
-        if data.shape[0] >= 200:
+        # print(data.shape)
+        if data.shape[2] >= 200:
             data = data[:, :, ::2]
             
-        print(data.shape)
+        # print(data.shape)
         data = data.transpose(2, 0, 1)
         data = data[:, :512, :512]
         
@@ -202,6 +202,13 @@ class HeadCTScan_TestSubmission(Dataset):
         data = nib.load(self.root_dir + '/' + file_name).get_fdata() # Load a n channel image
         # data = data.reshape((data.shape[0], data.shape[1], 1))
         # print(data.shape)
+        #! Remove the first 30% of the slices
+        data = data[:, :, int(0.3*data.shape[2]):]
+        
+        # print(data.shape)
+        if data.shape[2] >= 200:
+            data = data[:, :, ::2]
+            
         data = data.transpose(2, 0, 1)
         data = data[:, :512, :512]
 
