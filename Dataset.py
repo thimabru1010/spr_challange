@@ -128,10 +128,11 @@ class HeadCTScan_Val(Dataset):
         
         print('DEBUG VAL')
         #! Remove the first 30% of the slices
-        # data = data[int(0.3*data.shape[2]):, :, :]
+        data = data[:, :, int(0.3*data.shape[2]):]
+        
         print(data.shape)
         if data.shape[0] >= 200:
-            data = data[::2, :, :]
+            data = data[:, :, ::2]
             
         print(data.shape)
         data = data.transpose(2, 0, 1)
