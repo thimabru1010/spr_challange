@@ -71,7 +71,7 @@ class BaseExperiment():
             # if isinstance(checkpoint, dict):
             if 'model_state_dict' in checkpoint.keys():
                 self.model.load_state_dict(checkpoint['model_state_dict'])
-                self.optm.load_state_dict(checkpoint['optimizer_state_dict'])
+                # self.optm.load_state_dict(checkpoint['optimizer_state_dict'])
                 self.initial_epoch = checkpoint['epoch']
                 print(f'Last Learning Rate used: {checkpoint["lr"]}')
             else:
