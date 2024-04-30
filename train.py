@@ -171,6 +171,11 @@ if not args.deactivate_train:
     exp.train()
 
 if not args.deactivate_test:
+    if training_config['n_slices'] != training_config['in_shape'][0]:
+        batch_size_val = 1
+    else:
+        batch_size_val = batch_size
+        
     test_files = os.listdir(test_dir)
 
     test_set = HeadCTScan_TestSubmission(root_dir=test_dir, data_files=test_files, Debug=Debug, transform=val_transform)
