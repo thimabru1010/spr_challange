@@ -200,15 +200,17 @@ class HeadCTScan_TestSubmission(Dataset):
         file_name = self.data_files[index]
         
         data = nib.load(self.root_dir + '/' + file_name).get_fdata() # Load a n channel image
+        if len(data.shape) == 4:
+            data = data[:, :, :, 0]
         # data = data.reshape((data.shape[0], data.shape[1], 1))
-        print('DEBUG DATASET')
-        print(data.shape)
+        # print('DEBUG DATASET')
+        # print(data.shape)
         #! Remove the first 30% of the slices
-        data = data[:, :, int(0.3*data.shape[2]):]
+        # data = data[:, :, int(0.3*data.shape[2]):]
         
-        print(data.shape)
-        if data.shape[2] >= 200:
-            data = data[:, :, ::2]
+        # print(data.shape)
+        # if data.shape[2] >= 200:
+        #     data = data[:, :, ::2]
             
         data = data.transpose(2, 0, 1)
         data = data[:, :512, :512]
